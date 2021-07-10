@@ -3,6 +3,7 @@ package com.yalco.chatapat.config;
 import com.yalco.chatapat.security.filter.JwtAuthorizationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -14,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-public class AppSecurityConfig  extends WebSecurityConfigurerAdapter {
+public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final AuthenticationEntryPoint entryPoint;
     private final JwtAuthorizationFilter authorizationFilter;
@@ -30,9 +31,18 @@ public class AppSecurityConfig  extends WebSecurityConfigurerAdapter {
         http.cors().disable();
         http.csrf().disable();
 
+        http.authorizeRequests().mvcMatchers("/api/user-management/users").authenticated()
+                .and().authorizeRequests().mvcMatchers("/api/auth/login").permitAll();
+
         http.exceptionHandling().authenticationEntryPoint(entryPoint);
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(authorizationFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
 
     @Bean
