@@ -1,7 +1,9 @@
 package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.AuthenticationRequestDto;
+import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.security.AuthenticationService;
+import com.yalco.chatapat.service.ChatUserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final ChatUserService chatUserService;
 
-    public AuthenticationController(AuthenticationService authenticationService) {
+    public AuthenticationController(AuthenticationService authenticationService, ChatUserService chatUserService) {
         this.authenticationService = authenticationService;
+        this.chatUserService = chatUserService;
     }
 
     @PostMapping("/login")
@@ -33,5 +37,11 @@ public class AuthenticationController {
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody ChatUserDto userForRegistration) {
+        chatUserService.registerChatUser(userForRegistration);
+        return ResponseEntity.ok().build();
     }
 }
