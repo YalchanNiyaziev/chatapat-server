@@ -18,7 +18,7 @@ public class JpaUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        ChatUser user = chatUserRepository.getChatUsers().stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
+        ChatUser user = chatUserRepository.findAll().stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
 
         if (user == null) {
             throw new UsernameNotFoundException("User with username " + username + " does not exist.");
