@@ -1,6 +1,7 @@
 package com.yalco.chatapat.service;
 
 import com.yalco.chatapat.dto.ChatUserDto;
+import com.yalco.chatapat.dto.SearchChatUserDto;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
@@ -31,6 +32,10 @@ public class ChatUserService {
     public List<ChatUserDto> getALlChatUsers() {
         List<ChatUser> chatUsers = chatUserRepository.findAll();
         return ObjectConverter.convertList(chatUsers, ChatUserDto.class);
+    }
+
+    public List<ChatUserDto> searchChatUser(SearchChatUserDto search) {
+        return null;
     }
 
     public void registerChatUser(ChatUserDto user) {
