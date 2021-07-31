@@ -15,6 +15,7 @@ import org.springframework.util.Assert;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ChatUserService {
@@ -68,6 +69,8 @@ public class ChatUserService {
         }
         Assert.notNull(user.getUsername(), "Username must be provided");
         Assert.hasLength(user.getUsername(), "Username must not be empty");
+        Optional<ChatUser> foundUser = chatUserRepository.findChatUserByUsername(user.getUsername());
+        Assert.isNull(foundUser.orElse(null), "Username already in use");
 
         Assert.notNull(user.getPassword(), "Password must be provided");
         Assert.hasLength(user.getPassword(), "Password must not be empty");
