@@ -6,11 +6,10 @@ import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserGender;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
-import com.yalco.chatapat.exception.UserConnectionCreationException;
+import com.yalco.chatapat.exception.UserConnectionOperationException;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.UserConnectionRepository;
-import com.yalco.chatapat.utils.ObjectConverter;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -96,7 +95,7 @@ class ChatUserControllerTest {
     @Test
     @DisplayName("When requester and receiver has same usernames, expect throws")
     public void sendConnectionRequestWithSameUsernamesTest() {
-        assertThrows(UserConnectionCreationException.class, () ->
+        assertThrows(UserConnectionOperationException.class, () ->
                 chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake1").build()));
     }
 
@@ -110,8 +109,48 @@ class ChatUserControllerTest {
     @DisplayName("When user connection request exists, expect throws")
     public void sendDuplicateConnectionRequestTest() {
         chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
-        assertThrows(UserConnectionCreationException.class, () ->
+        assertThrows(UserConnectionOperationException.class, () ->
                 chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build()));
 
+    }
+
+    @Test
+    @DisplayName("When accept valid user connection request, expect update to real connection")
+    public void acceptValidConnectionRequestTest() {
+        //TODO add implementation
+
+    }
+
+    @Test
+    @DisplayName("When given same users as participant in user conversation request, expect throws")
+    public void acceptConnectionRequestWithSameUsersTest() {
+
+    }
+
+    @Test
+    @DisplayName("When given unexisting user as participants in user conversation request, expect throws")
+    public void acceptConnectionRequestWithUnExistingUsersTest() {
+        //TODO add implementation
+
+    }
+
+    @Test
+    @DisplayName("When reject valid users as participant in user conversation request, expect delete")
+    public void rejectValidConnectionRequestTest() {
+        //TODO add implementation
+
+    }
+
+    @Test
+    @DisplayName("When reject same users as participant in user conversation request, expect throws")
+    public void rejectConnectionRequestWithSameUsersTest() {
+        //TODO add implementation
+
+    }
+
+    @Test
+    @DisplayName("When reject unexisting user as participants in user conversation request, expect throws")
+    public void rejectConnectionRequestWithUnExistingUsersTest() {
+        //TODO add implementation
     }
 }

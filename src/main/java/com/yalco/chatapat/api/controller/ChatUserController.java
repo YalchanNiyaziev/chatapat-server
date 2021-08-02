@@ -2,6 +2,7 @@ package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.SearchChatUserDto;
+import com.yalco.chatapat.dto.UserPendingConnectionDto;
 import com.yalco.chatapat.service.ChatUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +49,10 @@ public class ChatUserController {
         return null;
     }
 
-    @GetMapping("/users/{userId}/pending-connections")
-    public ResponseEntity<List<ChatUserDto>> getPendingConnections(@PathVariable String userId) {
-        return ResponseEntity.ok().build();
+    //TODO write test
+    @GetMapping("/users/{username}/pending-connections")
+    public ResponseEntity<List<UserPendingConnectionDto>> getPendingConnections(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getAllPendingConnectionRequest(username));
     }
 
     @PostMapping("/users/{senderName}/pending-connections")
@@ -59,13 +61,15 @@ public class ChatUserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/users/{userId}/pending-connections/{acceptedUserId}")
-    public ResponseEntity<Void> acceptConnectionRequest(@PathVariable String userId, @PathVariable String acceptedUserId) {
+    @PutMapping("/users/{username}/pending-connections/{acceptedUsername}")
+    public ResponseEntity<Void> acceptConnectionRequest(@PathVariable String username, @PathVariable String acceptedUsername) {
+        userService.acceptConnectionRequest(username, acceptedUsername);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{userId}/pending-connection/{rejectUserId}")
-    public ResponseEntity<Void> rejectConnectionRequest(@PathVariable String userId, @PathVariable String rejectUserId) {
+    @DeleteMapping("/users/{username}/pending-connection/{rejectUsername}")
+    public ResponseEntity<Void> rejectConnectionRequest(@PathVariable String username, @PathVariable String rejectUsername) {
+        userService.rejectConnectionRequest(username, rejectUsername);
         return ResponseEntity.ok().build();
     }
 

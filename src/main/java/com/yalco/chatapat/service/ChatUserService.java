@@ -2,11 +2,12 @@ package com.yalco.chatapat.service;
 
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.SearchChatUserDto;
+import com.yalco.chatapat.dto.UserPendingConnectionDto;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
-import com.yalco.chatapat.exception.UserConnectionCreationException;
+import com.yalco.chatapat.exception.UserConnectionOperationException;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.UserConnectionRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,16 +48,27 @@ public class ChatUserService {
         return null;
     }
 
+    public List<UserPendingConnectionDto> getAllPendingConnectionRequest(String username) {
+        List<UserPendingConnectionDto> pendingConnection = new ArrayList<>();
+        List<UserConnection> foundConnections = connectionRepository.findAllByBearerUsernameAndConnectionRequestIsTrue(username);
+        foundConnections.forEach(c ->
+                pendingConnection.add(
+                        new UserPendingConnectionDto(ObjectConverter.convertObject(c.getRequester(), ChatUserDto.class), c.getLastUpdateTs())
+                )
+        );
+        return pendingConnection;
+    }
+
     public void sendConnectionRequest(String senderName, String receiverName) {
         boolean connectionExists = connectionRepository.existUserConnection(senderName, receiverName);
-        if(connectionExists) {
-            throw new UserConnectionCreationException("Can not create user connection request, user connection request already exists.");
+        if (connectionExists) {
+            throw new UserConnectionOperationException("Can not create user connection request, user connection request already exists.");
         }
         ChatUser sender = getChatUserByUsername(senderName);
         ChatUser receiver = getChatUserByUsername(receiverName);
 
-        if(Objects.equals(sender.getUsername(), receiver.getUsername())) {
-            throw new UserConnectionCreationException("Can not create user connection request, requester and receiver has same usernames");
+        if (Objects.equals(sender.getUsername(), receiver.getUsername())) {
+            throw new UserConnectionOperationException("Can not create user connection request, requester and receiver has same usernames");
         }
 
         UserConnection connectionRequest = new UserConnection();
@@ -68,6 +81,27 @@ public class ChatUserService {
         connectionRequest.setUpdatedBy(senderName);
 
         connectionRepository.save(connectionRequest);
+    }
+
+    public void acceptConnectionRequest(String reviewer, String acceptedUsername) {
+        UserConnection connectionRequest =
+                connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, acceptedUsername)
+                        .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to "+ reviewer + " from " + acceptedUsername));
+
+        connectionRequest.setConnected(true);
+        connectionRequest.setConnectionRequest(false);
+        connectionRequest.setLastUpdateTs(Instant.now());
+        connectionRequest.setUpdatedBy(reviewer);
+
+        connectionRepository.saveAndFlush(connectionRequest);
+    }
+
+    public void rejectConnectionRequest(String reviewer, String rejectedUsername) {
+        UserConnection connectionRequest =
+                connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, rejectedUsername)
+                        .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to "+ reviewer + " from " + rejectedUsername));
+
+        connectionRepository.delete(connectionRequest);
     }
 
     public void registerChatUser(ChatUserDto user) {
@@ -86,16 +120,16 @@ public class ChatUserService {
     private void validateUser(ChatUserDto user) {
         Assert.notNull(user, "User must be provided");
 
-        if(user.getId() != null) {
+        if (user.getId() != null) {
             throw new IllegalStateException("User id can not be given as parameter in user creation process");
         }
-        if(user.getClosed() != null) {
+        if (user.getClosed() != null) {
             throw new IllegalStateException("User close status can not be given as parameter in user creation process");
         }
-        if(user.getLocked() != null){
+        if (user.getLocked() != null) {
             throw new IllegalStateException("User lock status can not be given as parameter in user creation process");
         }
-        if(user.getStatus() != null){
+        if (user.getStatus() != null) {
             throw new IllegalStateException("User active status can not be given as parameter in user creation process");
         }
         Assert.notNull(user.getUsername(), "Username must be provided");
