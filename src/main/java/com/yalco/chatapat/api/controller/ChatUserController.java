@@ -28,13 +28,13 @@ public class ChatUserController {
         return ResponseEntity.ok(userService.searchChatUser(search));
     }
 
-    @GetMapping("/users/{userId}/contacts")
-    public ResponseEntity<List<ChatUserDto>> getContacts(@PathVariable String userId) {
+    @GetMapping("/users/{userId}/connections")
+    public ResponseEntity<List<ChatUserDto>> getConnections(@PathVariable String userId) {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{userId}/contacts/{removedUserId}")
-    public ResponseEntity<Void> removeContact(@PathVariable String userId, @PathVariable String removedUserId) {
+    @DeleteMapping("/users/{userId}/connections/{removedUserId}")
+    public ResponseEntity<Void> removeConnection(@PathVariable String userId, @PathVariable String removedUserId) {
         return null;
     }
 
@@ -48,23 +48,24 @@ public class ChatUserController {
         return null;
     }
 
-    @GetMapping("/users/{userId}/pending-contacts")
-    public ResponseEntity<List<ChatUserDto>> getPendingContacts(@PathVariable String userId) {
+    @GetMapping("/users/{userId}/pending-connections")
+    public ResponseEntity<List<ChatUserDto>> getPendingConnections(@PathVariable String userId) {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/users/{userId}/pending-contacts")
-    public ResponseEntity<List<ChatUserDto>> sendContactRequest(@PathVariable String userId, @RequestBody ChatUserDto contactInfo) {
+    @PostMapping("/users/{senderName}/pending-connections")
+    public ResponseEntity<Void> sendConnectionRequest(@PathVariable String senderName, @RequestBody ChatUserDto contactInfo) {
+        userService.sendConnectionRequest(senderName, contactInfo.getUsername());
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/users/{userId}/pending-contacts/{acceptedUserId}")
-    public ResponseEntity<Void> acceptContactRequest(@PathVariable String userId, @PathVariable String acceptedUserId) {
+    @PutMapping("/users/{userId}/pending-connections/{acceptedUserId}")
+    public ResponseEntity<Void> acceptConnectionRequest(@PathVariable String userId, @PathVariable String acceptedUserId) {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{userId}/pending-contacts/{rejectUserId}")
-    public ResponseEntity<Void> rejectContactRequest(@PathVariable String userId, @PathVariable String rejectUserId) {
+    @DeleteMapping("/users/{userId}/pending-connection/{rejectUserId}")
+    public ResponseEntity<Void> rejectConnectionRequest(@PathVariable String userId, @PathVariable String rejectUserId) {
         return ResponseEntity.ok().build();
     }
 

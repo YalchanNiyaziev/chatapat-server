@@ -3,9 +3,13 @@ package com.yalco.chatapat.service;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.SearchChatUserDto;
 import com.yalco.chatapat.entity.ChatUser;
+import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
+import com.yalco.chatapat.exception.UserConnectionCreationException;
+import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
+import com.yalco.chatapat.repository.UserConnectionRepository;
 import com.yalco.chatapat.utils.ObjectConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +19,7 @@ import org.springframework.util.Assert;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -23,10 +28,12 @@ public class ChatUserService {
     private static final Logger logger = LoggerFactory.getLogger(ChatUserService.class);
 
     private final ChatUserRepository chatUserRepository;
+    private final UserConnectionRepository connectionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public ChatUserService(ChatUserRepository chatUserRepository, PasswordEncoder passwordEncoder) {
+    public ChatUserService(ChatUserRepository chatUserRepository, UserConnectionRepository connectionRepository, PasswordEncoder passwordEncoder) {
         this.chatUserRepository = chatUserRepository;
+        this.connectionRepository = connectionRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -37,6 +44,30 @@ public class ChatUserService {
 
     public List<ChatUserDto> searchChatUser(SearchChatUserDto search) {
         return null;
+    }
+
+    public void sendConnectionRequest(String senderName, String receiverName) {
+        boolean connectionExists = connectionRepository.existUserConnection(senderName, receiverName);
+        if(connectionExists) {
+            throw new UserConnectionCreationException("Can not create user connection request, user connection request already exists.");
+        }
+        ChatUser sender = getChatUserByUsername(senderName);
+        ChatUser receiver = getChatUserByUsername(receiverName);
+
+        if(Objects.equals(sender.getUsername(), receiver.getUsername())) {
+            throw new UserConnectionCreationException("Can not create user connection request, requester and receiver has same usernames");
+        }
+
+        UserConnection connectionRequest = new UserConnection();
+        connectionRequest.setRequester(sender);
+        connectionRequest.setBearer(receiver);
+        connectionRequest.setConnectionRequest(true);
+        connectionRequest.setConnected(false);
+        connectionRequest.setBlocked(false);
+        connectionRequest.setLastUpdateTs(Instant.now());
+        connectionRequest.setUpdatedBy(senderName);
+
+        connectionRepository.save(connectionRequest);
     }
 
     public void registerChatUser(ChatUserDto user) {
@@ -84,6 +115,12 @@ public class ChatUserService {
         Assert.hasLength(user.getLastname(), "Last name must not be empty");
 
         Assert.notNull(user.getGender(), "Gender must be provided");
+    }
 
+    private ChatUser getChatUserByUsername(String username) {
+        Assert.notNull(username, "Username must be provided");
+        Assert.hasLength(username, "Username must not be empty");
+        Optional<ChatUser> foundUser = chatUserRepository.findChatUserByUsername(username);
+        return foundUser.orElseThrow(() -> new UserNotFoundException("Not found user with username " + username));
     }
 }
