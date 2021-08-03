@@ -202,4 +202,20 @@ class AuthenticationControllerTest {
         assertNull(authorizationHeader);
     }
 
+    @Test
+    @DisplayName("When username is not unique, expect throws")
+    public void usernameAlreadyInUseTest() {
+        ChatUserDto user = ChatUserDto.builder()
+                .birthDate(LocalDate.now())
+                .firstName("Dummy")
+                .lastname("Dummiev")
+                .gender(ChatUserGender.MALE)
+                .username("dummyUser")
+                .password("dummy_pass")
+                .build();
+
+        controller.registerUser(user);
+        assertThrows(IllegalArgumentException.class, ()-> controller.registerUser(user));
+    }
+
 }
