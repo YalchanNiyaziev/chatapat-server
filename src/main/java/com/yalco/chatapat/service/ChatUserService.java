@@ -86,7 +86,7 @@ public class ChatUserService {
     public void acceptConnectionRequest(String reviewer, String acceptedUsername) {
         UserConnection connectionRequest =
                 connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, acceptedUsername)
-                        .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to "+ reviewer + " from " + acceptedUsername));
+                        .orElseThrow(() -> new UserConnectionOperationException("There is no pending connection request to "+ reviewer + " from " + acceptedUsername));
 
         connectionRequest.setConnected(true);
         connectionRequest.setConnectionRequest(false);

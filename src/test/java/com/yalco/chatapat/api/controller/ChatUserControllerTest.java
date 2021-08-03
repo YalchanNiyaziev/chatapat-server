@@ -117,40 +117,96 @@ class ChatUserControllerTest {
     @Test
     @DisplayName("When accept valid user connection request, expect update to real connection")
     public void acceptValidConnectionRequestTest() {
-        //TODO add implementation
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        chatUserController.acceptConnectionRequest("fake2", "fake1");
 
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertEquals(1, connections.size());
+        assertEquals("fake1", connections.get(0).getRequester().getUsername());
+        assertEquals("fake2", connections.get(0).getBearer().getUsername());
+        assertFalse( connections.get(0).isConnectionRequest());
+        assertTrue(connections.get(0).isConnected());
+        assertFalse(connections.get(0).isBlocked());
+        assertEquals("fake2", connections.get(0).getUpdatedBy());
     }
 
     @Test
     @DisplayName("When given same users as participant in user conversation request, expect throws")
     public void acceptConnectionRequestWithSameUsersTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.acceptConnectionRequest("fake2", "fake2"));
+        assertEquals(1, connections.size());
+    }
 
+    @Test
+    @DisplayName("When connection request accepter name is same as requester, expect trows")
+    public void acceptWithRequesterUserTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.acceptConnectionRequest("fake1", "fake1"));
+        assertEquals(1, connections.size());
+    }
+
+    @Test
+    @DisplayName("When requester and accepter have changed their position , expect trows")
+    public void acceptWithChangedRequesterAndAccepterUserTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.acceptConnectionRequest("fake1", "fake2"));
+        assertEquals(1, connections.size());
     }
 
     @Test
     @DisplayName("When given unexisting user as participants in user conversation request, expect throws")
     public void acceptConnectionRequestWithUnExistingUsersTest() {
-        //TODO add implementation
-
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.acceptConnectionRequest("fassske1", "fadddke1"));
+        assertEquals(0, connections.size());
     }
 
     @Test
     @DisplayName("When reject valid users as participant in user conversation request, expect delete")
     public void rejectValidConnectionRequestTest() {
-        //TODO add implementation
-
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        chatUserController.rejectConnectionRequest("fake2", "fake1");
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertEquals(0, connections.size());
+        assertFalse(connectionRepository.existUserConnection("fake1", "fake2"));
     }
 
     @Test
     @DisplayName("When reject same users as participant in user conversation request, expect throws")
     public void rejectConnectionRequestWithSameUsersTest() {
-        //TODO add implementation
-
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.rejectConnectionRequest("fake1", "fake1"));
+        assertEquals(1, connections.size());
     }
 
     @Test
     @DisplayName("When reject unexisting user as participants in user conversation request, expect throws")
     public void rejectConnectionRequestWithUnExistingUsersTest() {
-        //TODO add implementation
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.rejectConnectionRequest("fakddde1", "ddd"));
+        assertEquals(0, connections.size());
+    }
+
+    @Test
+    @DisplayName("When reject connection request reviewer name is same as requester, expect trows")
+    public void rejectWithRequesterUserTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.rejectConnectionRequest("fake1", "fake1"));
+        assertEquals(1, connections.size());
+    }
+
+    @Test
+    @DisplayName("When requester and reject reviewer have changed their position, expect trows")
+    public void rejectWithChangedRequesterAndAccepterUserTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        List<UserConnection> connections = connectionRepository.findAll();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.rejectConnectionRequest("fake1", "fake2"));
+        assertEquals(1, connections.size());
     }
 }
