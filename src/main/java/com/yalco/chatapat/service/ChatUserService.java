@@ -40,6 +40,7 @@ public class ChatUserService {
     }
 
     public List<ChatUserDto> getALlChatUsers() {
+        //TODO return less info about user-> remove pass locked, id
         List<ChatUser> chatUsers = chatUserRepository.findAll();
         return ObjectConverter.convertList(chatUsers, ChatUserDto.class);
     }
