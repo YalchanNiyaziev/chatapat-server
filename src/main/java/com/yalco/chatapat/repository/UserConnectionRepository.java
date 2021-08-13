@@ -15,6 +15,10 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
             "or (c.requester.username = :bearer and c.bearer.username = :requester)")
     boolean existUserConnection(@Param("requester") String requester, @Param("bearer")String bearer);
 
+    @Query(value = "from UserConnection c where (c.requester.username = :requester and c.bearer.username = :bearer) " +
+            "or (c.requester.username = :bearer and c.bearer.username = :requester)")
+    Optional<UserConnection> findUserConnectionByParticipants(@Param("requester") String requester, @Param("bearer")String bearer);
+
     List<UserConnection> findAllByBearerUsernameAndConnectionRequestIsTrue(String username);
 
     Optional<UserConnection> findByBearerUsernameAndRequesterUsername(String bearerUsername, String requesterUsername);
