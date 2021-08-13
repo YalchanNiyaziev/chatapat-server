@@ -34,9 +34,10 @@ public class ChatUserController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{userId}/connections/{removedUserId}")
-    public ResponseEntity<Void> removeConnection(@PathVariable String userId, @PathVariable String removedUserId) {
-        return null;
+    @DeleteMapping("/users/{username}/connections/{removedUsername}")
+    public ResponseEntity<Void> removeConnection(@PathVariable String username, @PathVariable String removedUsername) {
+        userService.removeUserConnection(username, removedUsername);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/users/{userId}/blocks/{blockedId}")

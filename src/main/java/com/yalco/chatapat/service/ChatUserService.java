@@ -59,6 +59,19 @@ public class ChatUserService {
         return pendingConnection;
     }
 
+    public void removeUserConnection(String username, String removedUsername) {
+        UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(username, removedUsername)
+                .orElseThrow(() -> new UserConnectionOperationException("There is no connection with " + username + "and " + removedUsername));
+
+        foundConnection.setConnected(false);
+        foundConnection.setConnectionRequest(false);
+        foundConnection.setBlocked(false);
+        foundConnection.setLastUpdateTs(Instant.now());
+        foundConnection.setUpdatedBy(username);
+
+        connectionRepository.saveAndFlush(foundConnection);
+    }
+
     public void sendConnectionRequest(String senderName, String receiverName) {
         boolean connectionExists = connectionRepository.existUserConnection(senderName, receiverName);
         if (connectionExists) {
@@ -86,7 +99,7 @@ public class ChatUserService {
     public void acceptConnectionRequest(String reviewer, String acceptedUsername) {
         UserConnection connectionRequest =
                 connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, acceptedUsername)
-                        .orElseThrow(() -> new UserConnectionOperationException("There is no pending connection request to "+ reviewer + " from " + acceptedUsername));
+                        .orElseThrow(() -> new UserConnectionOperationException("There is no pending connection request to " + reviewer + " from " + acceptedUsername));
 
         connectionRequest.setConnected(true);
         connectionRequest.setConnectionRequest(false);
@@ -99,7 +112,7 @@ public class ChatUserService {
     public void rejectConnectionRequest(String reviewer, String rejectedUsername) {
         UserConnection connectionRequest =
                 connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, rejectedUsername)
-                        .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to "+ reviewer + " from " + rejectedUsername));
+                        .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to " + reviewer + " from " + rejectedUsername));
 
         connectionRepository.delete(connectionRequest);
     }
