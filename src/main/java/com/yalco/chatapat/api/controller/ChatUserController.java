@@ -40,14 +40,16 @@ public class ChatUserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/users/{userId}/blocks/{blockedId}")
-    public ResponseEntity<Void> blockUser(@PathVariable String userId, @PathVariable String blockedId) {
-        return null;
+    @PostMapping("/users/{username}/blocks/{blockedUsername}")
+    public ResponseEntity<Void> blockUser(@PathVariable String username, @PathVariable String blockedUsername) {
+        userService.blockUserConnection(username, blockedUsername);
+        return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{userId}/blocks/{blockedId}")
-    public ResponseEntity<Void> unblockUser(@PathVariable String userId, @PathVariable String blockedId) {
-        return null;
+    @DeleteMapping("/users/{username}/blocks/{unblockedUsername}")
+    public ResponseEntity<Void> unblockUser(@PathVariable String username, @PathVariable String unblockedUsername) {
+        userService.unblockUserConnection(username, unblockedUsername);
+        return ResponseEntity.ok().build();
     }
 
     //TODO write test
