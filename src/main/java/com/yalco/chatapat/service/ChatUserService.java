@@ -26,6 +26,7 @@ import java.util.Optional;
 
 @Service
 public class ChatUserService {
+    //TODO !!!! add check whether current action is done by current Principal
 
     private static final Logger logger = LoggerFactory.getLogger(ChatUserService.class);
 
@@ -48,20 +49,14 @@ public class ChatUserService {
         return null;
     }
 
-    public List<UserPendingConnectionDto> getAllPendingConnectionRequest(String username) {
-        List<UserPendingConnectionDto> pendingConnection = new ArrayList<>();
-        List<UserConnection> foundConnections = connectionRepository.findAllByBearerUsernameAndConnectionRequestIsTrue(username);
-        foundConnections.forEach(c ->
-                pendingConnection.add(
-                        new UserPendingConnectionDto(ObjectConverter.convertObject(c.getRequester(), ChatUserDto.class), c.getLastUpdateTs())
-                )
-        );
-        return pendingConnection;
-    }
 
     public void removeUserConnection(String username, String removedUsername) {
         UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(username, removedUsername)
                 .orElseThrow(() -> new UserConnectionOperationException("There is no connection with " + username + "and " + removedUsername));
+
+        if (!isConnected(foundConnection)) {
+            throw new UserConnectionOperationException("Can not remove unconnected connection. To remove connection it must be in connected state");
+        }
 
         foundConnection.setConnected(false);
         foundConnection.setConnectionRequest(false);
@@ -72,33 +67,75 @@ public class ChatUserService {
         connectionRepository.saveAndFlush(foundConnection);
     }
 
+    public void blockUserConnection(String requester, String blockedUsername) {
+        Optional<UserConnection> foundConnection = connectionRepository.findUserConnectionByParticipants(requester, blockedUsername);
+        UserConnection connection = null;
+
+        if(!foundConnection.isPresent()) {
+            connection = createInitialConnection(requester, blockedUsername);
+            connection.setBlocked(true);
+        } else {
+            connection = foundConnection.get();
+            connection.setConnected(false);
+            connection.setConnectionRequest(false);
+            connection.setBlocked(true);
+            connection.setLastUpdateTs(Instant.now());
+            connection.setUpdatedBy(requester);
+        }
+        connectionRepository.saveAndFlush(connection);
+    }
+
+    public void unblockUserConnection(String requester, String unblockedUsername) {
+        UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(requester, unblockedUsername)
+                .orElseThrow(() -> new UserConnectionOperationException("There is no connection with " + requester + "and " + unblockedUsername));
+        if (!isBlocked(foundConnection)) {
+            throw new UserConnectionOperationException("Can not unblock not blocked connection. To unblock connection it must be in blocked state");
+        }
+        foundConnection.setConnected(false);
+        foundConnection.setConnectionRequest(false);
+        foundConnection.setBlocked(false);
+        foundConnection.setLastUpdateTs(Instant.now());
+        foundConnection.setUpdatedBy(requester);
+
+        connectionRepository.saveAndFlush(foundConnection);
+    }
+
+    public List<UserPendingConnectionDto> getAllPendingConnectionRequest(String username) {
+        List<UserPendingConnectionDto> pendingConnection = new ArrayList<>();
+        List<UserConnection> foundConnections = connectionRepository.getAllPendingConnectionRequestByUsername(username);
+        foundConnections.forEach(c ->
+                pendingConnection.add(
+                        new UserPendingConnectionDto(ObjectConverter.convertObject(c.getRequester(), ChatUserDto.class), c.getLastUpdateTs())
+                )
+        );
+        return pendingConnection;
+    }
+
     public void sendConnectionRequest(String senderName, String receiverName) {
-        boolean connectionExists = connectionRepository.existUserConnection(senderName, receiverName);
-        if (connectionExists) {
-            throw new UserConnectionOperationException("Can not create user connection request, user connection request already exists.");
-        }
-        ChatUser sender = getChatUserByUsername(senderName);
-        ChatUser receiver = getChatUserByUsername(receiverName);
 
-        if (Objects.equals(sender.getUsername(), receiver.getUsername())) {
-            throw new UserConnectionOperationException("Can not create user connection request, requester and receiver has same usernames");
+        UserConnection connectionRequest = null;
+        Optional<UserConnection> existingConnection = connectionRepository.findUserConnectionByParticipants(senderName, receiverName);
+        if (existingConnection.isPresent()) {
+            connectionRequest = existingConnection.get();
+            if (!isRemoved(connectionRequest)) {
+                throw new UserConnectionOperationException("Can not create user connection request. Existing connection must be in removed state.");
+            }
+            connectionRequest.setConnected(false);
+            connectionRequest.setConnectionRequest(true);
+            connectionRequest.setBlocked(false);
+            connectionRequest.setLastUpdateTs(Instant.now());
+            connectionRequest.setUpdatedBy(senderName);
+        } else {
+            connectionRequest =  createInitialConnection(senderName, receiverName);
+            connectionRequest.setConnectionRequest(true);
         }
-
-        UserConnection connectionRequest = new UserConnection();
-        connectionRequest.setRequester(sender);
-        connectionRequest.setBearer(receiver);
-        connectionRequest.setConnectionRequest(true);
-        connectionRequest.setConnected(false);
-        connectionRequest.setBlocked(false);
-        connectionRequest.setLastUpdateTs(Instant.now());
-        connectionRequest.setUpdatedBy(senderName);
 
         connectionRepository.save(connectionRequest);
     }
 
     public void acceptConnectionRequest(String reviewer, String acceptedUsername) {
         UserConnection connectionRequest =
-                connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, acceptedUsername)
+                connectionRepository.findPendingConnectionRequestByParticipants(reviewer, acceptedUsername)
                         .orElseThrow(() -> new UserConnectionOperationException("There is no pending connection request to " + reviewer + " from " + acceptedUsername));
 
         connectionRequest.setConnected(true);
@@ -111,7 +148,7 @@ public class ChatUserService {
 
     public void rejectConnectionRequest(String reviewer, String rejectedUsername) {
         UserConnection connectionRequest =
-                connectionRepository.findByBearerUsernameAndRequesterUsername(reviewer, rejectedUsername)
+                connectionRepository.findPendingConnectionRequestByParticipants(reviewer, rejectedUsername)
                         .orElseThrow(() -> new UserConnectionOperationException("There is not pending connection request to " + reviewer + " from " + rejectedUsername));
 
         connectionRepository.delete(connectionRequest);
@@ -169,5 +206,39 @@ public class ChatUserService {
         Assert.hasLength(username, "Username must not be empty");
         Optional<ChatUser> foundUser = chatUserRepository.findChatUserByUsername(username);
         return foundUser.orElseThrow(() -> new UserNotFoundException("Not found user with username " + username));
+    }
+
+    private UserConnection createInitialConnection(String requester, String bearer) {
+        ChatUser sender = getChatUserByUsername(requester);
+        ChatUser receiver = getChatUserByUsername(bearer);
+
+        if (Objects.equals(sender.getUsername(), receiver.getUsername())) {
+            throw new UserConnectionOperationException("Can not create user connection request, requester and receiver has same usernames");
+        }
+        UserConnection userConnection = new UserConnection();
+        userConnection.setRequester(sender);
+        userConnection.setBearer(receiver);
+        userConnection.setConnected(false);
+        userConnection.setBlocked(false);
+        userConnection.setConnectionRequest(false);
+        userConnection.setLastUpdateTs(Instant.now());
+        userConnection.setUpdatedBy(requester);
+        return userConnection;
+    }
+
+    private boolean isConnectionRequested(UserConnection connection) {
+        return connection.isConnectionRequest() && !connection.isConnected() && !connection.isBlocked();
+    }
+
+    private boolean isConnected(UserConnection connection) {
+        return connection.isConnected() && !connection.isBlocked() && !connection.isConnectionRequest();
+    }
+
+    private boolean isRemoved(UserConnection connection) {
+        return !connection.isConnectionRequest() && !connection.isConnected() && !connection.isBlocked();
+    }
+
+    private boolean isBlocked(UserConnection connection) {
+        return connection.isBlocked() && !connection.isConnected() && !connection.isConnectionRequest();
     }
 }

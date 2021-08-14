@@ -86,7 +86,7 @@ class ChatUserControllerTest {
         assertEquals(1, connections.size());
         assertEquals("fake1", connections.get(0).getRequester().getUsername());
         assertEquals("fake2", connections.get(0).getBearer().getUsername());
-        assertTrue( connections.get(0).isConnectionRequest());
+        assertTrue(connections.get(0).isConnectionRequest());
         assertFalse(connections.get(0).isConnected());
         assertFalse(connections.get(0).isBlocked());
         assertEquals("fake1", connections.get(0).getUpdatedBy());
@@ -106,25 +106,23 @@ class ChatUserControllerTest {
     }
 
     @Test
-    @DisplayName("When user connection request exists, expect throws")
-    public void sendDuplicateConnectionRequestTest() {
-        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+    @DisplayName("When user connection request exists and it is not in removed state, expect throws")
+    public void sendConnectionRequestToExistingConnectionTest() {
+        createUserConnection();
         assertThrows(UserConnectionOperationException.class, () ->
                 chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build()));
-
     }
 
     @Test
     @DisplayName("When accept valid user connection request, expect update to real connection")
     public void acceptValidConnectionRequestTest() {
-        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
-        chatUserController.acceptConnectionRequest("fake2", "fake1");
+        createUserConnection();
 
         List<UserConnection> connections = connectionRepository.findAll();
         assertEquals(1, connections.size());
         assertEquals("fake1", connections.get(0).getRequester().getUsername());
         assertEquals("fake2", connections.get(0).getBearer().getUsername());
-        assertFalse( connections.get(0).isConnectionRequest());
+        assertFalse(connections.get(0).isConnectionRequest());
         assertTrue(connections.get(0).isConnected());
         assertFalse(connections.get(0).isBlocked());
         assertEquals("fake2", connections.get(0).getUpdatedBy());
@@ -158,7 +156,7 @@ class ChatUserControllerTest {
     }
 
     @Test
-    @DisplayName("When given unexisting user as participants in user connection request, expect throws")
+    @DisplayName("When given not existing user as participants in user connection request, expect throws")
     public void acceptConnectionRequestWithUnExistingUsersTest() {
         List<UserConnection> connections = connectionRepository.findAll();
         assertThrows(UserConnectionOperationException.class, () -> chatUserController.acceptConnectionRequest("fassske1", "fadddke1"));
@@ -185,7 +183,7 @@ class ChatUserControllerTest {
     }
 
     @Test
-    @DisplayName("When reject unexisting user as participants in user conversation request, expect throws")
+    @DisplayName("When reject not existing user as participants in user conversation request, expect throws")
     public void rejectConnectionRequestWithUnExistingUsersTest() {
         List<UserConnection> connections = connectionRepository.findAll();
         assertThrows(UserConnectionOperationException.class, () -> chatUserController.rejectConnectionRequest("fakddde1", "ddd"));
@@ -220,22 +218,163 @@ class ChatUserControllerTest {
         chatUserController.removeConnection("fake1", "fake2");
 
         assertEquals(1, connectionRepository.findAll().size());
-        assertFalse( connectionRepository.findAll().get(0).isConnectionRequest());
-        assertFalse( connectionRepository.findAll().get(0).isConnected());
-        assertFalse( connectionRepository.findAll().get(0).isBlocked());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertFalse(connectionRepository.findAll().get(0).isBlocked());
         assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
     }
 
     @Test
+    @DisplayName("When remove blocked user connection, expect throws")
+    public void removeBlockedConnectionTest() {
+        createBlockedUserConnection();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.removeConnection("fake1", "fake2"));
+    }
+
+    @Test
+    @DisplayName("When remove connection requested user connection, expect throws")
+    public void removeConnectionRequestedConnectionTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.removeConnection("fake1", "fake2"));
+    }
+
+    @Test
     @DisplayName("When remove user connection with invalid participants names, expect throw")
-    public void removeUserConnectionInvalidParticipants() {
+    public void removeUserConnectionInvalidParticipantsTest() {
         createUserConnection();
         assertThrows(UserConnectionOperationException.class, () -> chatUserController.removeConnection("faksse1", "fakdde2"));
     }
 
+    @Test
+    @DisplayName("When block user connection with valid participants name, expects update")
+    public void blockUserConnectionTest() {
+        createBlockedUserConnection();
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertTrue(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+    }
+
+    @Test
+    @DisplayName("When block removed user connection, expect update connection")
+    public void blockRemovedConnectionTest() {
+        createRemovedConnection();
+        chatUserController.blockUser("fake1", "fake2");
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertTrue(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+    }
+
+    @Test
+    @DisplayName("When block connection requested user connection, expect update connection")
+    public void blockConnectionRequestedConnectionTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        chatUserController.blockUser("fake1", "fake2");
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertTrue(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+    }
+
+    @Test
+    @DisplayName("When block user connection with invalid participants name, expects throws")
+    public void blockUserConnectionInvalidParticipantsNamesTest() {
+        createUserConnection();
+        assertThrows(UserNotFoundException.class, () -> chatUserController.blockUser("faksse1", "fakdde2"));
+    }
+
+    @Test
+    @DisplayName("When block not existing user connection, expect create new connection and block")
+    public void blockNotExistingConnection() {
+        chatUserController.blockUser("fake1", "fake2");
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertTrue(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+    }
+
+    @Test
+    @DisplayName("When unblock user connection with valid participants name, expects update")
+    public void unblockUserConnectionTest() {
+        createBlockedUserConnection();
+
+        chatUserController.unblockUser("fake1", "fake2");
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertFalse(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+
+    }
+
+    @Test
+    @DisplayName("When unblock user connection with invalid participants name, expects throws")
+    public void unblockUserConnectionInvalidParticipantsNamesTest() {
+        createBlockedUserConnection();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.unblockUser("faksse1", "fakdde2"));
+    }
+
+    @Test
+    @DisplayName("When unblock user connection in removed state, expects throws")
+    public void unblockRemovedUserConnectionTest() {
+        createRemovedConnection();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.unblockUser("fake1", "fake2"));
+    }
+
+    @Test
+    @DisplayName("When unblock user connection in connected state, expects throws")
+    public void unblockConnectedUserConnectionTest() {
+        createUserConnection();
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.unblockUser("fake1", "fake2"));
+    }
+
+    @Test
+    @DisplayName("When unblock user connection in connection requested state, expects throws")
+    public void unblockConnectionRequestedUserConnectionTest() {
+        chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
+        assertThrows(UserConnectionOperationException.class, () -> chatUserController.unblockUser("fake1", "fake2"));
+    }
+
+
     private void createUserConnection() {
         chatUserController.sendConnectionRequest("fake1", ChatUserDto.builder().username("fake2").build());
         chatUserController.acceptConnectionRequest("fake2", "fake1");
+    }
+
+    private void createBlockedUserConnection() {
+        createUserConnection();
+
+        assertEquals(1, connectionRepository.findAll().size());
+
+        chatUserController.blockUser("fake1", "fake2");
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertTrue(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+    }
+
+    private void createRemovedConnection() {
+        createUserConnection();
+        assertEquals(1, connectionRepository.findAll().size());
+        chatUserController.removeConnection("fake1", "fake2");
+
+        assertEquals(1, connectionRepository.findAll().size());
+        assertFalse(connectionRepository.findAll().get(0).isConnectionRequest());
+        assertFalse(connectionRepository.findAll().get(0).isConnected());
+        assertFalse(connectionRepository.findAll().get(0).isBlocked());
+        assertEquals("fake1", connectionRepository.findAll().get(0).getUpdatedBy());
+
     }
 
 }
