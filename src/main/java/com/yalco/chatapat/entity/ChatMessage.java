@@ -1,6 +1,7 @@
 package com.yalco.chatapat.entity;
 
 
+import com.yalco.chatapat.enums.MessageStatus;
 import com.yalco.chatapat.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,8 +26,14 @@ public class ChatMessage extends BaseEntity{
     @Column(nullable = false)
     private String content;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_status", nullable = false)
+    private MessageStatus status;
+
     @Column(nullable = false, name = "message_ts")
     private Instant messageTs;
+
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
