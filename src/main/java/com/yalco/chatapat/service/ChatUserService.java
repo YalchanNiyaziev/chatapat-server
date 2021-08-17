@@ -14,15 +14,14 @@ import com.yalco.chatapat.repository.UserConnectionRepository;
 import com.yalco.chatapat.utils.ObjectConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ChatUserService {
@@ -71,7 +70,7 @@ public class ChatUserService {
         Optional<UserConnection> foundConnection = connectionRepository.findUserConnectionByParticipants(requester, blockedUsername);
         UserConnection connection = null;
 
-        if(!foundConnection.isPresent()) {
+        if (!foundConnection.isPresent()) {
             connection = createInitialConnection(requester, blockedUsername);
             connection.setBlocked(true);
         } else {
@@ -126,7 +125,7 @@ public class ChatUserService {
             connectionRequest.setLastUpdateTs(Instant.now());
             connectionRequest.setUpdatedBy(senderName);
         } else {
-            connectionRequest =  createInitialConnection(senderName, receiverName);
+            connectionRequest = createInitialConnection(senderName, receiverName);
             connectionRequest.setConnectionRequest(true);
         }
 
@@ -165,6 +164,16 @@ public class ChatUserService {
         chatUser.setRole(UserRole.STANDARD_USER);
         chatUser = chatUserRepository.save(chatUser);
         logger.trace("User with username {} was created at {}", chatUser.getUsername(), chatUser.getRegistrationTs());
+    }
+
+    public Set<ChatUser> findChatUserByUsernames(String... usernames) {
+        Set<ChatUser> foundUsers = chatUserRepository.findAllByUsernameIn(Arrays.asList(usernames));
+        return foundUsers;
+    }
+
+    public ChatUser findChatUserByUsername(String username){
+        return chatUserRepository.findChatUserByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User with username " + username + " does not exist."));
     }
 
     private void validateUser(ChatUserDto user) {

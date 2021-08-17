@@ -8,11 +8,14 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ChatUserRepository extends JpaRepository<ChatUser, Long> {
 
     Optional<ChatUser> findChatUserByUsername(String username);
+
+    Set<ChatUser> findAllByUsernameIn(List<String> usernames);
 
 //    public List<ChatUser> getChatUsers() {
 //        List<ChatUser> users = new ArrayList<>();

@@ -16,8 +16,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "chat_messages")
-public class ChatMessage extends BaseEntity{
+@Table(name = "chat_conversation_messages")
+public class ConversationMessage extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Column(name = "message_type", nullable = false)

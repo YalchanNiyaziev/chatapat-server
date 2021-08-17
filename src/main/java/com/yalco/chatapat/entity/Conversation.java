@@ -31,16 +31,16 @@ public class Conversation extends BaseEntity{
     @Column(nullable = false)
     private Boolean vanishable;
 
-//    @ManyToMany(mappedBy = "conversations")
-//    private Set<ChatUser> participants;
-//
-//    public void addParticipant(ChatUser user) {
-//        this.participants.add(user);
-//        user.getConversations().add(this);
-//    }
-//
-//    public void removeParticipants(ChatUser user) {
-//        this.participants.remove(user);
-//        user.getConversations().remove(this);
-//    }
+    @ManyToMany(mappedBy = "conversations")
+    private Set<ChatUser> participants;
+
+    public void addParticipant(ChatUser user) {
+        this.participants.add(user);
+        user.getConversations().add(this);
+    }
+
+    public void removeParticipants(ChatUser user) {
+        this.participants.remove(user);
+        user.getConversations().remove(this);
+    }
 }
