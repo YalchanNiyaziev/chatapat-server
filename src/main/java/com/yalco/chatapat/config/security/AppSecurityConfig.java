@@ -1,4 +1,4 @@
-package com.yalco.chatapat.config;
+package com.yalco.chatapat.config.security;
 
 import com.yalco.chatapat.security.filter.JwtAuthorizationFilter;
 import org.springframework.context.annotation.Bean;

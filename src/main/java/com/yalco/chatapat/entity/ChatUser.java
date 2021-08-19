@@ -7,6 +7,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -52,6 +53,14 @@ public class ChatUser extends BaseUser{
     @ManyToOne(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
     private Address address;
+
+    @ManyToMany
+    @JoinTable(
+            name = "chat_user_x_conversation",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "conversation_id")
+    )
+    private Set<Conversation> conversations;
 
 //    private List<Post> posts;
 //    private List<ChatUserDto> constacts;

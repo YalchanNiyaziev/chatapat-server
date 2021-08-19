@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script src="js/sockjs-0.3.4.js"></script>
+<script src="js/stomp.js"></script>
+<body>
+<div>
+    <form class="input">
+        <label for="username">user name:</label>
+        <input id="username">
+        <label for="password">password:</label>
+        <input id="password">
+        <button id="submit">login</button>
+    </form>
+</div>
+
+<div>
+    <button id="getAllUsers">Get all users</button>
+</div>
+<div>
+    <button id="wsConnect">Connect</button>
+    <button id="wsDisconnect">Disconnect</button>
+</div>
+<div>
+    <label for="message">Message</label>
+    <input type="text" id="message">
+    <label for="message">To:</label>
+    <input type="text" id="toUser">
+    <button id="sendMessage">Send message</button>
+</div>
+<script>
+    let jwt = "";
+    let socket = null;
+    let stompClient = null;
+    let loggedUserName = null;
+
+    const getAllUsers = (event) => {
+        event.preventDefault();
+        const url = "http://localhost:8080/api/user-management/users";
+        console.log('get ', jwt);
+        console.log('get2  ', window.localStorage.getItem("token"));
+
+        fetch(url, {
+            headers: {
+                'Authorization': window.localStorage.getItem("token"),
+            }
+        })
+            .then(res => res.json())
+            .then(console.log)
+            .catch(console.log);
+    };
+    const login = (event) => {
+        event.preventDefault();
+
+        const loginUrl = "http://localhost:8080/api/auth/login";
+        const username = document.getElementById("username").value;
+        const pass = document.getElementById("password").value;
+        console.log(username, pass);
+        const credentials = {
+            username: username,
+            password: pass,
+        };
+        fetch(loginUrl, {
+            method: 'POST',
+            body: JSON.stringify(credentials),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(res => {
+            console.log(res);
+            return res;
+        })
+            .then(res => {
+                console.log("chatapat response header   ", res.headers.get('Authorization'));
+                jwt = res.headers.get('Authorization');
+                window.localStorage.setItem("token", res.headers.get('Authorization'));
+                loggedUserName = credentials.username;
+            })
+            .catch(console.log);
+    }
+
+    const connectWs = (event) => {
+        event.preventDefault();
+
+        socket = new SockJS('/ws-connect');
+        stompClient = Stomp.over(socket);
+        const jwt = window.localStorage.getItem("token");
+        if (jwt && jwt.length) {
+            stompClient.connect(
+                {
+                    "Authorization": jwt
+                }, frame => {
+                    console.log('Chatapat Frame: ', frame);
+
+                    stompClient.subscribe(`/user/queue/messages`, userSpecificMessage => {
+                        console.log('You received user specific message' + userSpecificMessage);
+                    });
+
+                });
+        } else {
+            console.log("can not find jwt");
+        }
+    }
+
+    const disconnectWs = event => {
+        event.preventDefault();
+        if(socket && stompClient) {
+            stompClient.disconnect();
+            socket.close();
+        }
+    }
+
+
+    const sendMessage = event => {
+        event.preventDefault();
+
+        const message = document.getElementById("message").value;
+        const receiver = document.getElementById("toUser").value;
+        if (message && message.length && receiver && receiver.length) {
+            const messagePayload = {
+                content: message,
+                senderName: loggedUserName,
+                receiverName: receiver,
+            }
+            stompClient.send("/chat/message", {}, JSON.stringify(messagePayload));
+        }
+    }
+
+    const submitButton = document.getElementById("submit");
+    const getAllUsersBtn = document.getElementById("getAllUsers");
+    const wsConnectBtn = document.getElementById("wsConnect");
+    const wsDisconnectBtn = document.getElementById("wsDisconnect");
+    const sendMessageBtn = document.getElementById("sendMessage");
+
+
+    submitButton.addEventListener("click", login);
+    getAllUsersBtn.addEventListener("click", getAllUsers);
+    wsConnectBtn.addEventListener("click", connectWs);
+    wsDisconnectBtn.addEventListener("click", disconnectWs);
+    sendMessageBtn.addEventListener("click", sendMessage);
+
+
+</script>
+</body>
+</html>
