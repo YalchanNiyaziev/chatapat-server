@@ -19,6 +19,8 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     @Query("select c from Conversation c join c.participants p where p.username = :username")
     Optional<Conversation> findFirstByParticipantsIn(@Param("username") String participants);
 
+    List<Conversation> findAllByParticipantsUsername(String username);
+
     @Query("select c from Conversation c  join c.participants p where p.username in :participants group by c")
     List<Conversation> findFirstByParticipantsIn(@Param("participants") List<String> usernames);
 

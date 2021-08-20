@@ -31,4 +31,7 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
     Optional<UserConnection> findPendingConnectionRequestByParticipants(@Param("reviewer") String reviewer, @Param("requester")String requester);
 
     Optional<UserConnection> findByBearerUsernameAndRequesterUsername(String bearerUsername, String requesterUsername);
+
+    @Query(value = "from UserConnection  c where c.bearer.username = :username or c.requester.username = :username")
+    List<UserConnection> findAllConnectionsByParticipantUsername(@Param("username") String username);
 }

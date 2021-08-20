@@ -35,6 +35,7 @@ public class ConversationMessage extends BaseEntity{
     private Instant messageTs;
 
 
+//    @ManyToOne(cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE})
     @ManyToOne
     @JoinColumn(name = "sender_id")
     private ChatUser sender;

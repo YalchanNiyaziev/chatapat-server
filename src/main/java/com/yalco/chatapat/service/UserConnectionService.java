@@ -1,9 +1,13 @@
 package com.yalco.chatapat.service;
 
 import com.yalco.chatapat.dto.ChatUserDto;
+import com.yalco.chatapat.dto.UserConnectionDto;
 import com.yalco.chatapat.dto.UserPendingConnectionDto;
+import com.yalco.chatapat.entity.BaseEntity;
 import com.yalco.chatapat.entity.ChatUser;
+import com.yalco.chatapat.entity.Conversation;
 import com.yalco.chatapat.entity.UserConnection;
+import com.yalco.chatapat.enums.MessageType;
 import com.yalco.chatapat.exception.UserConnectionOperationException;
 import com.yalco.chatapat.repository.UserConnectionRepository;
 import com.yalco.chatapat.utils.ObjectConverter;
@@ -11,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,7 +32,13 @@ public class UserConnectionService {
     private static final Logger logger = LoggerFactory.getLogger(UserConnectionService.class);
 
     private final ChatUserService userService;
+    private final ConversationService conversationService;
     private final UserConnectionRepository connectionRepository;
+
+    public List<UserConnectionDto> getUserSpecificUserConnections(String username) {
+        return null;
+    }
+
 
     public void removeUserConnection(String username, String removedUsername) {
         UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(username, removedUsername)
@@ -135,15 +144,9 @@ public class UserConnectionService {
         connectionRepository.delete(connectionRequest);
     }
 
-    private ChatUser getChatUserByUsername(String username) {
-        Assert.notNull(username, "Username must be provided");
-        Assert.hasLength(username, "Username must not be empty");
-        return userService.findChatUserByUsername(username);
-    }
-
     private UserConnection createInitialConnection(String requester, String bearer) {
-        ChatUser sender = getChatUserByUsername(requester);
-        ChatUser receiver = getChatUserByUsername(bearer);
+        ChatUser sender = userService.getChatUserByUsername(requester);
+        ChatUser receiver = userService.getChatUserByUsername(bearer);
 
         if (Objects.equals(sender.getUsername(), receiver.getUsername())) {
             throw new UserConnectionOperationException("Can not create user connection request, requester and receiver has same usernames");

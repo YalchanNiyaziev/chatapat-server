@@ -1,6 +1,7 @@
 package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.ChatUserDto;
+import com.yalco.chatapat.dto.UserConnectionDto;
 import com.yalco.chatapat.dto.UserPendingConnectionDto;
 import com.yalco.chatapat.service.UserConnectionService;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,10 @@ public class UserConnectionController {
 
     private final UserConnectionService connectionService;
 
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<List<ChatUserDto>> getConnections(@PathVariable String userId) {
-        return ResponseEntity.ok().build();
+    @GetMapping("/users/{username}")
+    public ResponseEntity<List<UserConnectionDto>> getConnections(@PathVariable String username) {
+        //TODO make it Pageable for future
+        return ResponseEntity.ok(connectionService.getUserSpecificUserConnections(username));
     }
 
     @DeleteMapping("/users/{username}-{removedUsername}")

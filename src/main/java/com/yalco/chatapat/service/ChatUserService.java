@@ -59,6 +59,12 @@ public class ChatUserService {
                 .orElseThrow(() -> new UserNotFoundException("User with username " + username + " does not exist."));
     }
 
+    public ChatUser getChatUserByUsername(String username) {
+        Assert.notNull(username, "Username must be provided");
+        Assert.hasLength(username, "Username must not be empty");
+        return findChatUserByUsername(username);
+    }
+
     private void validateUser(ChatUserDto user) {
         Assert.notNull(user, "User must be provided");
 
