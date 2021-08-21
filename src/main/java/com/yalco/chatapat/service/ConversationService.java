@@ -1,6 +1,6 @@
 package com.yalco.chatapat.service;
 
-import com.yalco.chatapat.dto.TextMessageDto;
+import com.yalco.chatapat.dto.ConversationMessageDto;
 import com.yalco.chatapat.dto.UserConversationDto;
 import com.yalco.chatapat.entity.*;
 import com.yalco.chatapat.enums.ConversationType;
@@ -57,6 +57,7 @@ public class ConversationService {
                                 .lastMessage(MessageType.TEXT.equals(lastMessage.getType()) ? lastMessage.getContent() : "Attachment")
                                 .lastMessageTs(lastMessage.getMessageTs())
                                 .lastMessageSenderUsername(lastMessage.getSender().getUsername())
+                                .messageStatus(lastMessage.getStatus())
                                 .build();
 
                 conversations.add(conversationDto);
@@ -68,11 +69,25 @@ public class ConversationService {
         return conversations;
     }
 
-    public void saveUserSpecificTextMessage(TextMessageDto textMessage) {
+    public List<ConversationMessageDto> getAllMessagesFromConversation(Long conversationId) {
+        return messageRepository
+                .findAllByConversationIdOrderByMessageTsDesc(conversationId)
+                .stream()
+                .map(m ->
+                        ConversationMessageDto.builder()
+                                .content(m.getContent())
+                                .messageTs(m.getMessageTs())
+                                .senderName(m.getSender() != null ? m.getSender().getUsername() : null)
+                                .type(m.getType())
+                                .build()
+                ).collect(Collectors.toList());
+    }
+
+    public void saveUserSpecificTextMessage(ConversationMessageDto textMessage) {
         Conversation conversation = getConversationByParticipantUsernames(textMessage.getReceiverName(), textMessage.getSenderName());
         ConversationMessage message = new ConversationMessage();
         message.setContent(textMessage.getContent());
-        message.setSender(chatUserService.findChatUserByUsername(textMessage.getSenderName()));
+        message.setSender(chatUserService.getChatUserByUsername(textMessage.getSenderName()));
         message.setMessageTs(textMessage.getMessageTs() != null ? textMessage.getMessageTs() : Instant.now());
         message.setType(MessageType.TEXT);
         message.setStatus(MessageStatus.SEND);

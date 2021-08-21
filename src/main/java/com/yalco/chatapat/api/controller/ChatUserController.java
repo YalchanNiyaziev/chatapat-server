@@ -23,6 +23,11 @@ public class ChatUserController {
         return ResponseEntity.ok(userService.getALlChatUsers());
     }
 
+    @GetMapping("/users/{username}")
+    public ResponseEntity<ChatUserDto> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getChatUseDtoByUsername(username));
+    }
+
     @PostMapping("/users/search")
     public ResponseEntity<List<ChatUserDto>> search(SearchChatUserDto search) {
         return ResponseEntity.ok(userService.searchChatUser(search));

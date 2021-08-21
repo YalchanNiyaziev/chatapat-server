@@ -1,6 +1,7 @@
 package com.yalco.chatapat.dto;
 
 import com.yalco.chatapat.enums.ChatUserStatus;
+import com.yalco.chatapat.enums.MessageStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,4 +23,5 @@ public class UserConversationDto {
     private String lastMessage;
     private Instant lastMessageTs;
     private String lastMessageSenderUsername;
+    private MessageStatus messageStatus;
 }

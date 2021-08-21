@@ -6,6 +6,7 @@ import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.enums.ChatUserGender;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.ConversationMessageRepository;
+import com.yalco.chatapat.repository.UserConnectionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,12 @@ class AuthenticationControllerTest {
     @Autowired
     private ConversationMessageRepository messageRepository;
 
+    @Autowired
+    private UserConnectionRepository connectionRepository;
+
     @BeforeEach
     public void cleanUp() {
+        connectionRepository.deleteAll();
         messageRepository.deleteAll();
         userRepository.deleteAll();
     }

@@ -54,15 +54,19 @@ public class ChatUserService {
         return foundUsers;
     }
 
-    public ChatUser findChatUserByUsername(String username) {
-        return chatUserRepository.findChatUserByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User with username " + username + " does not exist."));
+    public ChatUserDto getChatUseDtoByUsername(String username) {
+        return ObjectConverter.convertObject(getChatUserByUsername(username), ChatUserDto.class);
     }
 
     public ChatUser getChatUserByUsername(String username) {
         Assert.notNull(username, "Username must be provided");
         Assert.hasLength(username, "Username must not be empty");
         return findChatUserByUsername(username);
+    }
+
+    private ChatUser findChatUserByUsername(String username) {
+        return chatUserRepository.findChatUserByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User with username " + username + " does not exist."));
     }
 
     private void validateUser(ChatUserDto user) {
