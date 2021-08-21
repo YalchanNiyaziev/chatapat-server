@@ -47,6 +47,7 @@ public class ConversationService {
 
                 UserConversationDto conversationDto =
                         UserConversationDto.builder()
+                                .conversationId(conversation.getId())
                                 .firstName(partner.getFirstName())
                                 .surName(partner.getLastName())
                                 .username(partner.getUsername())

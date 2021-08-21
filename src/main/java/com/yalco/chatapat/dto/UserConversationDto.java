@@ -14,6 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserConversationDto {
+    private Long conversationId;
     private String firstName;
     private String surName;
     private String username;
