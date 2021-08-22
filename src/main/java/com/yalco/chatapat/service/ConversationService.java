@@ -1,5 +1,6 @@
 package com.yalco.chatapat.service;
 
+import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.ConversationMessageDto;
 import com.yalco.chatapat.dto.UserConversationDto;
 import com.yalco.chatapat.entity.*;
@@ -75,12 +76,23 @@ public class ConversationService {
                 .findAllByConversationIdOrderByMessageTsDesc(conversationId)
                 .stream()
                 .map(m ->
-                        ConversationMessageDto.builder()
-                                .content(m.getContent())
-                                .messageTs(m.getMessageTs())
-                                .senderName(m.getSender() != null ? m.getSender().getUsername() : null)
-                                .type(m.getType())
-                                .build()
+                                ConversationMessageDto.builder()
+//                                .messageId(m.getId())
+                                        .content(m.getContent())
+                                        .messageTs(m.getMessageTs())
+                                        .senderInfo(
+                                                Optional.ofNullable(m.getSender())
+                                                        .map(sender ->
+                                                                ChatUserDto.builder()
+                                                                        .firstName(sender.getFirstName())
+                                                                        .lastname(sender.getLastName())
+                                                                        .chatName(sender.getChatName())
+                                                                        .username(sender.getUsername())
+                                                                        .picture(sender.getPicture())
+                                                                        .build()
+                                                        ).orElse(null))
+                                        .type(m.getType())
+                                        .build()
                 ).collect(Collectors.toList());
     }
 

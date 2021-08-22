@@ -13,17 +13,23 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConversationMessageDto {
 
-    private String content;
-    private String senderName;
+//    private Long messageId;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String content;
+
     private String receiverName;
 
     private Instant messageTs;
 
     //TODO remove or resolve if websoclet message fails
     private MessageType type;
+
+    private ChatUserDto senderInfo;
+
+    // TODO remove after allow ws comunication
+    private String senderName;
 
 }
