@@ -23,6 +23,8 @@ public class ChatUserController {
         return ResponseEntity.ok(userService.getALlChatUsers());
     }
 
+    // TODO make validation than only proncipal with same username can call this endpoint, because this fetch all user info
+    //  OR create another andpoint to fetch self info !!!
     @GetMapping("/users/{username}")
     public ResponseEntity<ChatUserDto> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.getChatUseDtoByUsername(username));
@@ -32,4 +34,6 @@ public class ChatUserController {
     public ResponseEntity<List<ChatUserDto>> search(SearchChatUserDto search) {
         return ResponseEntity.ok(userService.searchChatUser(search));
     }
+
+    //TODO add functionality to edit user profile and change Pass AND RESET PASS AND SEND WELCOME EMAIL
 }
