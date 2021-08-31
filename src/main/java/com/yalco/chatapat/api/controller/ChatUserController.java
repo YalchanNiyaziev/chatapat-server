@@ -31,7 +31,7 @@ public class ChatUserController {
     }
 
     @PostMapping("/users/search")
-    public ResponseEntity<List<ChatUserDto>> search(SearchChatUserDto search) {
+    public ResponseEntity<List<ChatUserDto>> search(@RequestBody SearchChatUserDto search) {
         return ResponseEntity.ok(userService.searchChatUser(search));
     }
 

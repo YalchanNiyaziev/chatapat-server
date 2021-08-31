@@ -7,6 +7,7 @@ import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
+import com.yalco.chatapat.repository.specification.ChatUserSpecification;
 import com.yalco.chatapat.utils.ObjectConverter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,7 +34,8 @@ public class ChatUserService {
     }
 
     public List<ChatUserDto> searchChatUser(SearchChatUserDto search) {
-        return null;
+        List<ChatUser> foundUsers = chatUserRepository.findAll(new ChatUserSpecification(search));
+        return ObjectConverter.convertList(foundUsers, ChatUserDto.class);
     }
 
     public void registerChatUser(ChatUserDto user) {
