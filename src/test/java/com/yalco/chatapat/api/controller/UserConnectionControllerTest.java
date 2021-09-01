@@ -52,6 +52,7 @@ class UserConnectionControllerTest {
         chatUser.setStatus(ChatUserStatus.ACTIVE);
         chatUser.setClosed(false);
         chatUser.setLocked(false);
+        chatUser.setPicture("some Url");
         chatUser.setRegistrationTs(Instant.now());
         chatUser.setRole(UserRole.STANDARD_USER);
 
@@ -65,6 +66,7 @@ class UserConnectionControllerTest {
         chatUserTwo.setStatus(ChatUserStatus.ACTIVE);
         chatUserTwo.setClosed(false);
         chatUserTwo.setLocked(false);
+        chatUserTwo.setPicture("some Url");
         chatUserTwo.setRegistrationTs(Instant.now());
         chatUserTwo.setRole(UserRole.STANDARD_USER);
 

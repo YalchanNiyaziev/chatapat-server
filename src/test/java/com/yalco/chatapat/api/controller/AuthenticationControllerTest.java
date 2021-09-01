@@ -4,6 +4,7 @@ import com.yalco.chatapat.dto.AuthenticationRequestDto;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.enums.ChatUserGender;
+import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.ConversationMessageRepository;
 import com.yalco.chatapat.repository.UserConnectionRepository;
@@ -52,6 +53,7 @@ class AuthenticationControllerTest {
                 .gender(ChatUserGender.MALE)
                 .username("dummyUser")
                 .password("dummy_pass")
+                .picture("some picture url")
                 .build();
 
         controller.registerUser(user);
@@ -184,6 +186,7 @@ class AuthenticationControllerTest {
                 .gender(ChatUserGender.MALE)
                 .username("dummyUser")
                 .password("dummy_pass")
+                .picture("some picture url")
                 .build();
 
         controller.registerUser(user);
@@ -204,6 +207,7 @@ class AuthenticationControllerTest {
                 .gender(ChatUserGender.MALE)
                 .username("dummyUser")
                 .password("dummy_pass")
+                .picture("some picture url")
                 .build();
 
         controller.registerUser(user);
@@ -222,6 +226,7 @@ class AuthenticationControllerTest {
                 .gender(ChatUserGender.MALE)
                 .username("dummyUser")
                 .password("dummy_pass")
+                .picture("some picture url")
                 .build();
 
         controller.registerUser(user);
