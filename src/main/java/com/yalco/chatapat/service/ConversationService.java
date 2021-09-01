@@ -73,7 +73,7 @@ public class ConversationService {
 
     public List<ConversationMessageDto> getAllMessagesFromConversation(Long conversationId) {
         return messageRepository
-                .findAllByConversationIdOrderByMessageTsDesc(conversationId)
+                .findAllByConversationIdOrderByMessageTsAsc(conversationId)
                 .stream()
                 .map(m ->
                                 ConversationMessageDto.builder()
@@ -96,7 +96,7 @@ public class ConversationService {
                 ).collect(Collectors.toList());
     }
 
-    public void saveUserSpecificTextMessage(ConversationMessageDto textMessage) {
+    public ConversationMessageDto saveUserSpecificTextMessage(ConversationMessageDto textMessage) {
         Conversation conversation = getConversationByParticipantUsernames(textMessage.getReceiverName(), textMessage.getSenderName());
         ConversationMessage message = new ConversationMessage();
         message.setContent(textMessage.getContent());
@@ -106,7 +106,16 @@ public class ConversationService {
         message.setStatus(MessageStatus.SEND);
         message.setConversation(conversation);
 
-        messageRepository.save(message);
+        message = messageRepository.save(message);
+
+        return ConversationMessageDto.builder()
+                .conversationId(message.getConversation().getId())
+                .content(message.getContent())
+                .messageTs(message.getMessageTs())
+                .messageStatus(message.getStatus())
+                .type(message.getType())
+                .senderInfo(ChatUserDto.builder().username(message.getSender().getUsername()).build())
+                .build();
     }
 
     // TODO thing about this and decide, which one of this teo methods that finds conversation has better performance

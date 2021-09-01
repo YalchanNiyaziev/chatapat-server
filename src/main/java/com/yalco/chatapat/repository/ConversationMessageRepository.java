@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ConversationMessageRepository extends JpaRepository<ConversationMessage, Long> {
     Optional<ConversationMessage> findTopByConversationIdOrderByMessageTsDesc(Long conversationId);
-    List<ConversationMessage> findAllByConversationIdOrderByMessageTsDesc(Long conversationId);
+    List<ConversationMessage> findAllByConversationIdOrderByMessageTsAsc(Long conversationId);
 }

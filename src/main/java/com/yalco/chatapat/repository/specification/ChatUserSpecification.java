@@ -27,7 +27,7 @@ public class ChatUserSpecification implements Specification<ChatUser> {
         }
 
         if (StringUtils.hasText(chatUserSearch.getUsername())) {
-            predicates.add(criteriaBuilder.like(root.get("username"), "%" + chatUserSearch.getUsername() + "%"));
+            predicates.add(criteriaBuilder.equal(root.get("username"), chatUserSearch.getUsername()));
         }
         if (StringUtils.hasText(chatUserSearch.getChatName())) {
             predicates.add(criteriaBuilder.like(root.get("chatName"), "%" + chatUserSearch.getChatName() + "%"));

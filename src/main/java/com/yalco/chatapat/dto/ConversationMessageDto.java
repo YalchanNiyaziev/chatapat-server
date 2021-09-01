@@ -1,6 +1,7 @@
 package com.yalco.chatapat.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.yalco.chatapat.enums.MessageStatus;
 import com.yalco.chatapat.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,5 +32,9 @@ public class ConversationMessageDto {
 
     // TODO remove after allow ws comunication
     private String senderName;
+
+    private Long conversationId;
+
+    private MessageStatus messageStatus;
 
 }

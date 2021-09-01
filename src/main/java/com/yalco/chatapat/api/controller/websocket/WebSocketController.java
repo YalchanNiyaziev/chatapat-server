@@ -20,7 +20,7 @@ public class WebSocketController {
 
     @MessageMapping("/message")
     public void processMessage(@Payload ConversationMessageDto message) {
-        conversationService.saveUserSpecificTextMessage(message);
-        messagingTemplate.convertAndSendToUser(message.getReceiverName(), "/queue/messages", message);
+        ConversationMessageDto messageToSend = conversationService.saveUserSpecificTextMessage(message);
+        messagingTemplate.convertAndSendToUser(message.getReceiverName(), "/queue/messages", messageToSend);
     }
 }
