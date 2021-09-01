@@ -2,7 +2,6 @@ package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.SearchChatUserDto;
-import com.yalco.chatapat.dto.UserPendingConnectionDto;
 import com.yalco.chatapat.service.ChatUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,61 +23,17 @@ public class ChatUserController {
         return ResponseEntity.ok(userService.getALlChatUsers());
     }
 
+    // TODO make validation than only proncipal with same username can call this endpoint, because this fetch all user info
+    //  OR create another andpoint to fetch self info !!!
+    @GetMapping("/users/{username}")
+    public ResponseEntity<ChatUserDto> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getChatUseDtoByUsername(username));
+    }
+
     @PostMapping("/users/search")
-    public ResponseEntity<List<ChatUserDto>> search(SearchChatUserDto search) {
+    public ResponseEntity<List<ChatUserDto>> search(@RequestBody SearchChatUserDto search) {
         return ResponseEntity.ok(userService.searchChatUser(search));
     }
 
-    @GetMapping("/users/{userId}/connections")
-    public ResponseEntity<List<ChatUserDto>> getConnections(@PathVariable String userId) {
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/users/{username}/connections/{removedUsername}")
-    public ResponseEntity<Void> removeConnection(@PathVariable String username, @PathVariable String removedUsername) {
-        userService.removeUserConnection(username, removedUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/users/{username}/blocks/{blockedUsername}")
-    public ResponseEntity<Void> blockUser(@PathVariable String username, @PathVariable String blockedUsername) {
-        userService.blockUserConnection(username, blockedUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/users/{username}/blocks/{unblockedUsername}")
-    public ResponseEntity<Void> unblockUser(@PathVariable String username, @PathVariable String unblockedUsername) {
-        userService.unblockUserConnection(username, unblockedUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    //TODO write test
-    @GetMapping("/users/{username}/pending-connections")
-    public ResponseEntity<List<UserPendingConnectionDto>> getPendingConnections(@PathVariable String username) {
-        return ResponseEntity.ok(userService.getAllPendingConnectionRequest(username));
-    }
-
-    @PostMapping("/users/{senderName}/pending-connections")
-    public ResponseEntity<Void> sendConnectionRequest(@PathVariable String senderName, @RequestBody ChatUserDto contactInfo) {
-        userService.sendConnectionRequest(senderName, contactInfo.getUsername());
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/users/{username}/pending-connections/{acceptedUsername}")
-    public ResponseEntity<Void> acceptConnectionRequest(@PathVariable String username, @PathVariable String acceptedUsername) {
-        userService.acceptConnectionRequest(username, acceptedUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/users/{username}/pending-connection/{rejectUsername}")
-    public ResponseEntity<Void> rejectConnectionRequest(@PathVariable String username, @PathVariable String rejectUsername) {
-        userService.rejectConnectionRequest(username, rejectUsername);
-        return ResponseEntity.ok().build();
-    }
-
-    //send contact request
-    //list of all pending request
-    //approve OR reject contact request
-    //remove contact
-    //block contact
+    //TODO add functionality to edit user profile and change Pass AND RESET PASS AND SEND WELCOME EMAIL
 }

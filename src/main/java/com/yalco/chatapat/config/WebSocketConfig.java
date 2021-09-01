@@ -47,11 +47,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-connect")
-                .setAllowedOrigins("/*")
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 
@@ -104,8 +107,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         DefaultContentTypeResolver resolver = new DefaultContentTypeResolver();
         resolver.setDefaultMimeType(MimeTypeUtils.APPLICATION_JSON);
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setObjectMapper(new ObjectMapper());
+        converter.setObjectMapper(objectMapper);
         converter.setContentTypeResolver(resolver);
         messageConverters.add(converter);
-        return false;    }
+        return false;
+    }
 }

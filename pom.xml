@@ -86,6 +86,10 @@
             <version>2.3.2</version>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ru.yandex.qatools.embed</groupId>
             <artifactId>postgresql-embedded</artifactId>
             <version>2.10</version>

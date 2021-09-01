@@ -1,7 +1,7 @@
 package com.yalco.chatapat.api.controller.websocket;
 
 
-import com.yalco.chatapat.dto.TextMessageDto;
+import com.yalco.chatapat.dto.ConversationMessageDto;
 import com.yalco.chatapat.service.ConversationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -19,8 +19,8 @@ public class WebSocketController {
     private ConversationService conversationService;
 
     @MessageMapping("/message")
-    public void processMessage(@Payload TextMessageDto message) {
-        conversationService.saveUserSpecificTextMessage(message);
-        messagingTemplate.convertAndSendToUser(message.getReceiverName(), "/queue/messages", message);
+    public void processMessage(@Payload ConversationMessageDto message) {
+        ConversationMessageDto messageToSend = conversationService.saveUserSpecificTextMessage(message);
+        messagingTemplate.convertAndSendToUser(message.getReceiverName(), "/queue/messages", messageToSend);
     }
 }

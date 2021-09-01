@@ -1,5 +1,7 @@
 package com.yalco.chatapat.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.yalco.chatapat.enums.ChatUserGender;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import lombok.*;
@@ -11,9 +13,11 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatUserDto {
     private Long id;
     private String username;
+    @JsonIgnore
     private String password;
     private String chatName;
     private String firstName;

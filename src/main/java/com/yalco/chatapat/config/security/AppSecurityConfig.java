@@ -32,9 +32,10 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().disable();
         http.csrf().disable();
 
-        http.authorizeRequests().mvcMatchers("/api/user-management/users").authenticated()
+        http.authorizeRequests()
                 .and().authorizeRequests().mvcMatchers("/api/auth/login").permitAll()
-                .and().authorizeRequests().mvcMatchers("/api/auth/register").permitAll();
+                .and().authorizeRequests().mvcMatchers("/api/auth/register").permitAll()
+                .mvcMatchers("/api/**").authenticated();
 
         http.exceptionHandling().authenticationEntryPoint(entryPoint);
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

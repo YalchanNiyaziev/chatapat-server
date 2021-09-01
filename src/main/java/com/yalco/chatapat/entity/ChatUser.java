@@ -38,7 +38,7 @@ public class ChatUser extends BaseUser{
     @Column(nullable = false)
     private ChatUserStatus status;
 
-    @Column
+    @Column(nullable = false)
     private String picture;
 
     @Column(nullable = false)
