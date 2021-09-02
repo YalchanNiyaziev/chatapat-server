@@ -2,6 +2,7 @@ package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.AuthenticationRequestDto;
 import com.yalco.chatapat.dto.ChatUserDto;
+import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.enums.ChatUserGender;
 import com.yalco.chatapat.enums.ChatUserStatus;
@@ -46,14 +47,14 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When user is valid, expect save")
     public void userRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
-                .picture("some picture url")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         controller.registerUser(user);
@@ -61,9 +62,9 @@ class AuthenticationControllerTest {
         List<ChatUser> countUsers = userRepository.findAll();
 
         assertEquals(1, countUsers.size());
-        assertEquals(user.getUsername(), countUsers.get(0).getUsername());
+        assertEquals(user.getEmail(), countUsers.get(0).getUsername());
         assertEquals(user.getFirstName(), countUsers.get(0).getFirstName());
-        assertEquals(user.getLastname(), countUsers.get(0).getLastName());
+        assertEquals(user.getLastName(), countUsers.get(0).getLastName());
         assertEquals(user.getGender(), countUsers.get(0).getGender());
         assertEquals(user.getBirthDate(), countUsers.get(0).getBirthDate());
     }
@@ -71,12 +72,13 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When username is missing, expect throws")
     public void usernameMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
                 .password("dummy_pass")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -86,12 +88,28 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When password is missing, expect throws")
     public void passwordMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
+                .passwordConfirm("dummy_pass")
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
+    }
+
+    @Test
+    @DisplayName("When password confirmation is missing, expect throws")
+    public void passwordConfirmationMissingRegistrationTest() {
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
+                .birthDate(LocalDate.now())
+                .firstName("Dummy")
+                .lastName("Dummiev")
+                .gender(ChatUserGender.MALE)
+                .email("dummyUser")
+                .password("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -101,12 +119,13 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When birth date is missing, expect throws")
     public void birthDateMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -114,31 +133,32 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    @DisplayName("When user id is given, expect throws")
-    public void givenUserIdRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
-                .id(4545L)
+    @DisplayName("When password and confirm password not match, expect throws")
+    public void passwordConfirmMismatchTest() {
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
+                .passwordConfirm("SOMETHING DIFFERENT")
                 .build();
 
-        assertThrows(IllegalStateException.class, () -> controller.registerUser(user));
+        assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
 
     }
 
     @Test
     @DisplayName("When first name is missing, expect throws")
     public void firstNameMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -149,12 +169,13 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When last name is missing, expect throws")
     public void lastNameMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -164,12 +185,13 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When gender is missing, expect throws")
     public void genderMissingRegistrationTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
-                .username("dummyUser")
+                .lastName("Dummiev")
+                .email("dummyUser")
                 .password("dummy_pass")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         assertThrows(IllegalArgumentException.class, () -> controller.registerUser(user));
@@ -179,14 +201,14 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When valid credentials, expect login")
     public void validCredentialsLoginTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
-                .picture("some picture url")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         controller.registerUser(user);
@@ -200,14 +222,14 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When invalid credentials, expect throws")
     public void invalidCredentialsLoginTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
-                .picture("some picture url")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         controller.registerUser(user);
@@ -219,14 +241,14 @@ class AuthenticationControllerTest {
     @Test
     @DisplayName("When username is not unique, expect throws")
     public void usernameAlreadyInUseTest() {
-        ChatUserDto user = ChatUserDto.builder()
+        ChatUserRegistrationRequest user = ChatUserRegistrationRequest.builder()
                 .birthDate(LocalDate.now())
                 .firstName("Dummy")
-                .lastname("Dummiev")
+                .lastName("Dummiev")
                 .gender(ChatUserGender.MALE)
-                .username("dummyUser")
+                .email("dummyUser")
                 .password("dummy_pass")
-                .picture("some picture url")
+                .passwordConfirm("dummy_pass")
                 .build();
 
         controller.registerUser(user);
