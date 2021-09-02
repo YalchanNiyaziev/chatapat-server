@@ -1,7 +1,7 @@
 package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.AuthenticationRequestDto;
-import com.yalco.chatapat.dto.ChatUserDto;
+import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
 import com.yalco.chatapat.security.AuthenticationService;
 import com.yalco.chatapat.service.ChatUserService;
 import org.springframework.http.HttpHeaders;
@@ -40,7 +40,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody ChatUserDto userForRegistration) {
+    public ResponseEntity<?> registerUser(@RequestBody ChatUserRegistrationRequest userForRegistration) {
         chatUserService.registerChatUser(userForRegistration);
         return ResponseEntity.ok().build();
     }
