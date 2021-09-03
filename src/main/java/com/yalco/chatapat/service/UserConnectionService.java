@@ -32,11 +32,18 @@ public class UserConnectionService {
     private static final Logger logger = LoggerFactory.getLogger(UserConnectionService.class);
 
     private final ChatUserService userService;
-    private final ConversationService conversationService;
     private final UserConnectionRepository connectionRepository;
 
     public List<UserConnectionDto> getUserSpecificUserConnections(String username) {
         return null;
+    }
+
+    public boolean isBlockedConnection(String participantOne, String participantTwo) {
+        return connectionRepository.existBlockedUserConnection(participantOne, participantTwo);
+    }
+
+    public boolean isConnectedConnection(String participantOne, String participantTwo) {
+        return connectionRepository.existConnectedUserConnection(participantOne, participantTwo);
     }
 
 

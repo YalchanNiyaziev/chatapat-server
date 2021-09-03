@@ -85,7 +85,7 @@ public class ConversationService {
                                                         .map(sender ->
                                                                 ChatUserDto.builder()
                                                                         .firstName(sender.getFirstName())
-                                                                        .lastname(sender.getLastName())
+                                                                        .lastName(sender.getLastName())
                                                                         .chatName(sender.getChatName())
                                                                         .username(sender.getUsername())
                                                                         .picture(sender.getPicture())
