@@ -21,6 +21,7 @@ public class ChatUserSpecification implements Specification<ChatUser> {
 
     @Override
     public Predicate toPredicate(Root<ChatUser> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+        // TODO add root=root.join(UserConnection) when make relation many to many and filter unblocked connections here
         List<Predicate> predicates = new ArrayList<>();
         if (chatUserSearch == null) {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -35,8 +36,8 @@ public class ChatUserSpecification implements Specification<ChatUser> {
         if (StringUtils.hasText(chatUserSearch.getFirstName())) {
             predicates.add(criteriaBuilder.like(root.get("firstName"), "%" + chatUserSearch.getFirstName() + "%"));
         }
-        if (StringUtils.hasText(chatUserSearch.getLastname())) {
-            predicates.add(criteriaBuilder.like(root.get("lastName"), "%" + chatUserSearch.getLastname() + "%"));
+        if (StringUtils.hasText(chatUserSearch.getLastName())) {
+            predicates.add(criteriaBuilder.like(root.get("lastName"), "%" + chatUserSearch.getLastName() + "%"));
         }
         if (chatUserSearch.getBirthDate() != null) {
             predicates.add(criteriaBuilder.equal(root.get("birthDate"), chatUserSearch.getBirthDate()));
@@ -44,6 +45,21 @@ public class ChatUserSpecification implements Specification<ChatUser> {
         if (chatUserSearch.getGender() != null) {
             predicates.add(criteriaBuilder.equal(root.get("gender"), chatUserSearch.getGender()));
         }
+        if(chatUserSearch.getRole() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("role"), chatUserSearch.getRole()));
+        }
+        if(chatUserSearch.getStatus() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("status"), chatUserSearch.getStatus()));
+        }
+        if(chatUserSearch.getLocked() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("locked"), chatUserSearch.getLocked()));
+        }
+        if(chatUserSearch.getClosed() != null) {
+            predicates.add(criteriaBuilder.equal(root.get("closed"), chatUserSearch.getClosed()));
+        }
+
+
+        // TODO add some predicates for admin filtering, EXAMPLE registration TS before and after
 
         if (chatUserSearch.getAddress() != null) {
             AddressDto address = chatUserSearch.getAddress();

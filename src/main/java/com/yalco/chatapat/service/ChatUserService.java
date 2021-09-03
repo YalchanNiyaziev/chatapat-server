@@ -8,8 +8,10 @@ import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
+import com.yalco.chatapat.repository.UserConnectionRepository;
 import com.yalco.chatapat.repository.specification.ChatUserSpecification;
 import com.yalco.chatapat.utils.ObjectConverter;
+import com.yalco.chatapat.utils.ServiceUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ public class ChatUserService {
     private String defaultProfileImage;
 
     private final ChatUserRepository chatUserRepository;
+    private final UserConnectionRepository connectionRepository;
     private final PasswordEncoder passwordEncoder;
 
     public List<ChatUserDto> getALlChatUsers() {
@@ -38,9 +41,37 @@ public class ChatUserService {
         return ObjectConverter.convertList(chatUsers, ChatUserDto.class);
     }
 
-    public List<ChatUserDto> searchChatUser(SearchChatUserDto search) {
+    public List<ChatUserDto> searchChatUserByStandardUser(SearchChatUserDto search) {
+        List<ChatUserDto> resultList = new ArrayList<>();
+        String currentUser = ServiceUtils.getAuthenticatedUsername();
+        if (currentUser == null) {
+            return resultList;
+        }
+        search.setRole(UserRole.STANDARD_USER);
+        search.setStatus(null);
+        search.setLocked(null);
+        search.setClosed(null);
+        search.setRegisterBeforeTs(null);
+        search.setRegisterAfterTs(null);
+
+        // TODO make it pageable
         List<ChatUser> foundUsers = chatUserRepository.findAll(new ChatUserSpecification(search));
-        return ObjectConverter.convertList(foundUsers, ChatUserDto.class);
+        for (ChatUser user : foundUsers) {
+            if(connectionRepository.existBlockedUserConnection(currentUser, user.getUsername())){
+                // DO Not pass blocked connections in search results
+                continue;
+            }
+            ChatUserDto dto = ObjectConverter.convertObject(user, ChatUserDto.class);
+            dto.setClosed(null);
+            dto.setLocked(null);
+            dto.setStatus(null);
+            dto.setRole(null);
+            dto.setSelf(Objects.equals(currentUser, dto.getUsername()));
+            dto.setConnected(connectionRepository.existConnectedUserConnection(currentUser, dto.getUsername()));
+            dto.setPending(connectionRepository.existUserConnectionRequest(currentUser, dto.getUsername()));
+            resultList.add(dto);
+        }
+        return resultList;
     }
 
     public void registerChatUser(ChatUserRegistrationRequest user) {

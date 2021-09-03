@@ -32,7 +32,7 @@ public class ChatUserController {
 
     @PostMapping("/users/search")
     public ResponseEntity<List<ChatUserDto>> search(@RequestBody SearchChatUserDto search) {
-        return ResponseEntity.ok(userService.searchChatUser(search));
+        return ResponseEntity.ok(userService.searchChatUserByStandardUser(search));
     }
 
     //TODO add functionality to edit user profile and change Pass AND RESET PASS AND SEND WELCOME EMAIL

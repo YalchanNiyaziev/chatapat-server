@@ -15,6 +15,22 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
             "or (c.requester.username = :bearer and c.bearer.username = :requester)")
     boolean existUserConnection(@Param("requester") String requester, @Param("bearer")String bearer);
 
+    @Query(value = "select count(c)>0 from UserConnection c where ((c.requester.username = :requester and c.bearer.username = :bearer) " +
+            "or (c.requester.username = :bearer and c.bearer.username = :requester)) and " +
+            "(c.connectionRequest = false and c.blocked = true and c.connected = false)")
+    boolean existBlockedUserConnection(@Param("requester") String requester, @Param("bearer")String bearer);
+
+    @Query(value = "select count(c)>0 from UserConnection c where ((c.requester.username = :requester and c.bearer.username = :bearer) " +
+            "or (c.requester.username = :bearer and c.bearer.username = :requester)) and " +
+            "(c.connectionRequest = false and c.blocked = false and c.connected = true)")
+    boolean existConnectedUserConnection(@Param("requester") String requester, @Param("bearer")String bearer);
+
+    @Query(value = "select count(c)>0 from UserConnection c where ((c.requester.username = :requester and c.bearer.username = :bearer) " +
+            "or (c.requester.username = :bearer and c.bearer.username = :requester)) and " +
+            "(c.connectionRequest = true and c.blocked = false and c.connected = false)")
+    boolean existUserConnectionRequest(@Param("requester") String requester, @Param("bearer")String bearer);
+
+
     @Query(value = "from UserConnection c where (c.requester.username = :requester and c.bearer.username = :bearer) " +
             "or (c.requester.username = :bearer and c.bearer.username = :requester)")
     Optional<UserConnection> findUserConnectionByParticipants(@Param("requester") String requester, @Param("bearer")String bearer);
