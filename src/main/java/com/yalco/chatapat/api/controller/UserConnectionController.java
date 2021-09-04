@@ -2,7 +2,6 @@ package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.UserConnectionDto;
-import com.yalco.chatapat.dto.UserPendingConnectionDto;
 import com.yalco.chatapat.service.UserConnectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +28,11 @@ public class UserConnectionController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/users/{username}/blocks")
+    public ResponseEntity<List<UserConnectionDto>> getBlockedConnections(@PathVariable String username) {
+        return ResponseEntity.ok(connectionService.getAllBlockedConnections(username));
+    }
+
     @PostMapping("/users/{username}-{blockedUsername}/blocks")
     public ResponseEntity<Void> blockUser(@PathVariable String username, @PathVariable String blockedUsername) {
         connectionService.blockUserConnection(username, blockedUsername);
@@ -43,7 +47,7 @@ public class UserConnectionController {
 
     //TODO write test
     @GetMapping("/users/{username}/pending-connections")
-    public ResponseEntity<List<UserPendingConnectionDto>> getPendingConnections(@PathVariable String username) {
+    public ResponseEntity<List<UserConnectionDto>> getPendingConnections(@PathVariable String username) {
         return ResponseEntity.ok(connectionService.getAllPendingConnectionRequest(username));
     }
 

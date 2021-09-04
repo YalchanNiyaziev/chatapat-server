@@ -38,8 +38,16 @@ public interface UserConnectionRepository extends JpaRepository<UserConnection, 
 //    List<UserConnection> findAllByBearerUsernameAndConnectionRequestIsTrue(String username);
 
     @Query(value = "from UserConnection c where (c.bearer.username = :username or c.requester.username = :username) and " +
+            "(c.connectionRequest = false and c.blocked = false and c.connected = true )")
+    List<UserConnection> getAllConnectedUserConnectionsByUsername(@Param("username") String username);
+
+    @Query(value = "from UserConnection c where (c.bearer.username = :username or c.requester.username = :username) and " +
             "(c.connectionRequest = true and c.blocked = false and c.connected = false) and c.updatedBy <> :username")
     List<UserConnection> getAllPendingConnectionRequestByUsername(@Param("username") String username);
+
+    @Query(value = "from UserConnection c where (c.bearer.username = :username or c.requester.username = :username) and " +
+            "(c.connectionRequest = false and c.blocked = true and c.connected = false) and c.updatedBy = :username")
+    List<UserConnection> getAllBlockedConnectionsByUsername(@Param("username") String username);
 
     @Query(value = "from UserConnection c where ((c.requester.username = :reviewer and c.bearer.username = :requester) or " +
             "(c.requester.username = :requester and c.bearer.username = :reviewer)) and " +

@@ -31,9 +31,12 @@ public class ChatUserDto {
     private Boolean locked;
     private Boolean closed;
     private AddressDto address;
+
+    // TODO thing about how to remove them and when search return UserConnectionDto
     private Boolean connected;
     private Boolean self;
     private Boolean pending;
+    private Boolean isSenderConnectionRequest;
 
 //    private List<Post> posts;
 //    private List<ChatUserDto> constacts;
