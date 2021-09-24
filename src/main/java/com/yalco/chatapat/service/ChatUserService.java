@@ -4,8 +4,10 @@ import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
 import com.yalco.chatapat.dto.SearchChatUserDto;
 import com.yalco.chatapat.entity.ChatUser;
+import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
+import com.yalco.chatapat.exception.UserConnectionOperationException;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.UserConnectionRepository;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -43,6 +46,12 @@ public class ChatUserService {
 
     public List<ChatUserDto> searchChatUserByStandardUser(SearchChatUserDto search) {
         List<ChatUserDto> resultList = new ArrayList<>();
+        if (!StringUtils.hasText(search.getUsername()) && !StringUtils.hasText(search.getFirstName())
+                && !StringUtils.hasText(search.getLastName()) && !StringUtils.hasText(search.getChatName())
+                && search.getAddress() != null && !StringUtils.hasText(search.getAddress().getCountry())
+                && !StringUtils.hasText(search.getAddress().getCity())) {
+            return resultList;
+        }
         String currentUser = ServiceUtils.getAuthenticatedUsername();
         if (currentUser == null) {
             return resultList;
@@ -57,18 +66,20 @@ public class ChatUserService {
         // TODO make it pageable
         List<ChatUser> foundUsers = chatUserRepository.findAll(new ChatUserSpecification(search));
         for (ChatUser user : foundUsers) {
-            if(connectionRepository.existBlockedUserConnection(currentUser, user.getUsername())){
+            UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(currentUser, user.getUsername())
+                    .orElse(null);
+            if (foundConnection != null && ServiceUtils.isBlocked(foundConnection)) {
                 // DO Not pass blocked connections in search results
                 continue;
             }
             ChatUserDto dto = ObjectConverter.convertObject(user, ChatUserDto.class);
             dto.setClosed(null);
             dto.setLocked(null);
-            dto.setStatus(null);
             dto.setRole(null);
             dto.setSelf(Objects.equals(currentUser, dto.getUsername()));
-            dto.setConnected(connectionRepository.existConnectedUserConnection(currentUser, dto.getUsername()));
-            dto.setPending(connectionRepository.existUserConnectionRequest(currentUser, dto.getUsername()));
+            dto.setConnected(foundConnection != null && ServiceUtils.isConnected(foundConnection));
+            dto.setPending(foundConnection != null && ServiceUtils.isConnectionRequested(foundConnection));
+            dto.setIsSenderConnectionRequest(foundConnection != null && Objects.equals(foundConnection.getUpdatedBy(), currentUser));
             resultList.add(dto);
         }
         return resultList;

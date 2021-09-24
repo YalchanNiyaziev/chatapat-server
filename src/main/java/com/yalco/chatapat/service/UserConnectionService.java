@@ -11,6 +11,7 @@ import com.yalco.chatapat.enums.MessageType;
 import com.yalco.chatapat.exception.UserConnectionOperationException;
 import com.yalco.chatapat.repository.UserConnectionRepository;
 import com.yalco.chatapat.utils.ObjectConverter;
+import com.yalco.chatapat.utils.ServiceUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,56 @@ public class UserConnectionService {
     private final UserConnectionRepository connectionRepository;
 
     public List<UserConnectionDto> getUserSpecificUserConnections(String username) {
-        return null;
+        List<UserConnectionDto> resultList = new ArrayList<>();
+        List<UserConnection> foundConnections =
+                connectionRepository.getAllConnectedUserConnectionsByUsername(username);
+        for (UserConnection connection : foundConnections) {
+            if (connection.getRequester() == null || connection.getBearer() == null) {
+                logger.error("Invalid participants in connection with id {}", connection.getId());
+                continue;
+            }
+            UserConnectionDto connectionDto = new UserConnectionDto();
+            connectionDto.setId(connection.getId());
+            connectionDto.setBlocked(false);
+            connectionDto.setConnectionRequested(false);
+            connectionDto.setConnected(true);
+            connectionDto.setUpdatedBy(connection.getUpdatedBy());
+            ChatUser partner = connection.getRequester();
+            if (Objects.equals(partner.getUsername(), username)) {
+                partner = connection.getBearer();
+            }
+            ChatUserDto partnerDto = ObjectConverter.convertObject(partner, ChatUserDto.class);
+            connectionDto.setPartner(partnerDto);
+
+            resultList.add(connectionDto);
+        }
+        return resultList;
+    }
+
+    public List<UserConnectionDto> getAllBlockedConnections(String username) {
+        List<UserConnectionDto> resultList = new ArrayList<>();
+        List<UserConnection> foundBlocked = connectionRepository.getAllBlockedConnectionsByUsername(username);
+        for (UserConnection blockedConnection : foundBlocked) {
+            if (blockedConnection.getRequester() == null || blockedConnection.getBearer() == null) {
+                logger.error("Invalid participants in connection with id {}", blockedConnection.getId());
+                continue;
+            }
+            UserConnectionDto connectionDto = new UserConnectionDto();
+            connectionDto.setId(blockedConnection.getId());
+            connectionDto.setBlocked(true);
+            connectionDto.setConnectionRequested(false);
+            connectionDto.setConnected(false);
+            connectionDto.setUpdatedBy(blockedConnection.getUpdatedBy());
+            ChatUser partner = blockedConnection.getRequester();
+            if (Objects.equals(partner.getUsername(), username)) {
+                partner = blockedConnection.getBearer();
+            }
+            ChatUserDto partnerDto = ObjectConverter.convertObject(partner, ChatUserDto.class);
+            connectionDto.setPartner(partnerDto);
+
+            resultList.add(connectionDto);
+        }
+        return resultList;
     }
 
     public boolean isBlockedConnection(String participantOne, String participantTwo) {
@@ -51,7 +101,7 @@ public class UserConnectionService {
         UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(username, removedUsername)
                 .orElseThrow(() -> new UserConnectionOperationException("There is no connection with " + username + "and " + removedUsername));
 
-        if (!isConnected(foundConnection)) {
+        if (!ServiceUtils.isConnected(foundConnection)) {
             throw new UserConnectionOperationException("Can not remove unconnected connection. To remove connection it must be in connected state");
         }
 
@@ -83,9 +133,10 @@ public class UserConnectionService {
     }
 
     public void unblockUserConnection(String requester, String unblockedUsername) {
+        // TODO try to return unblocked connection it's previous state
         UserConnection foundConnection = connectionRepository.findUserConnectionByParticipants(requester, unblockedUsername)
                 .orElseThrow(() -> new UserConnectionOperationException("There is no connection with " + requester + "and " + unblockedUsername));
-        if (!isBlocked(foundConnection)) {
+        if (!ServiceUtils.isBlocked(foundConnection)) {
             throw new UserConnectionOperationException("Can not unblock not blocked connection. To unblock connection it must be in blocked state");
         }
         foundConnection.setConnected(false);
@@ -97,15 +148,32 @@ public class UserConnectionService {
         connectionRepository.saveAndFlush(foundConnection);
     }
 
-    public List<UserPendingConnectionDto> getAllPendingConnectionRequest(String username) {
-        List<UserPendingConnectionDto> pendingConnection = new ArrayList<>();
+    public List<UserConnectionDto> getAllPendingConnectionRequest(String username) {
+        List<UserConnectionDto> pendingConnections = new ArrayList<>();
         List<UserConnection> foundConnections = connectionRepository.getAllPendingConnectionRequestByUsername(username);
-        foundConnections.forEach(c ->
-                pendingConnection.add(
-                        new UserPendingConnectionDto(ObjectConverter.convertObject(c.getRequester(), ChatUserDto.class), c.getLastUpdateTs())
-                )
-        );
-        return pendingConnection;
+
+        for (UserConnection connection : foundConnections) {
+            if (connection.getRequester() == null || connection.getBearer() == null) {
+                logger.error("Invalid participants in connection with id {}", connection.getId());
+                continue;
+            }
+            UserConnectionDto connectionDto = new UserConnectionDto();
+            connectionDto.setId(connection.getId());
+            connectionDto.setBlocked(false);
+            connectionDto.setConnectionRequested(true);
+            connectionDto.setConnected(false);
+            connectionDto.setUpdatedBy(connection.getUpdatedBy());
+            ChatUser partner = connection.getRequester();
+            if (Objects.equals(partner.getUsername(), username)) {
+                partner = connection.getBearer();
+            }
+            ChatUserDto partnerDto = ObjectConverter.convertObject(partner, ChatUserDto.class);
+            connectionDto.setPartner(partnerDto);
+
+            pendingConnections.add(connectionDto);
+        }
+
+        return pendingConnections;
     }
 
     public void sendConnectionRequest(String senderName, String receiverName) {
@@ -114,7 +182,7 @@ public class UserConnectionService {
         Optional<UserConnection> existingConnection = connectionRepository.findUserConnectionByParticipants(senderName, receiverName);
         if (existingConnection.isPresent()) {
             connectionRequest = existingConnection.get();
-            if (!isRemoved(connectionRequest)) {
+            if (!ServiceUtils.isRemoved(connectionRequest)) {
                 throw new UserConnectionOperationException("Can not create user connection request. Existing connection must be in removed state.");
             }
             connectionRequest.setConnected(false);
@@ -167,22 +235,6 @@ public class UserConnectionService {
         userConnection.setLastUpdateTs(Instant.now());
         userConnection.setUpdatedBy(requester);
         return userConnection;
-    }
-
-    private boolean isConnected(UserConnection connection) {
-        return connection.isConnected() && !connection.isBlocked() && !connection.isConnectionRequest();
-    }
-
-    private boolean isConnectionRequested(UserConnection connection) {
-        return connection.isConnectionRequest() && !connection.isConnected() && !connection.isBlocked();
-    }
-
-    private boolean isRemoved(UserConnection connection) {
-        return !connection.isConnectionRequest() && !connection.isConnected() && !connection.isBlocked();
-    }
-
-    private boolean isBlocked(UserConnection connection) {
-        return connection.isBlocked() && !connection.isConnected() && !connection.isConnectionRequest();
     }
 
 }
