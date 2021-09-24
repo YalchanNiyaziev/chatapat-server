@@ -63,7 +63,7 @@ public class UserConnectionController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/users/{username}-{rejectUsername}/pending-connection")
+    @DeleteMapping("/users/{username}-{rejectUsername}/pending-connections")
     public ResponseEntity<Void> rejectConnectionRequest(@PathVariable String username, @PathVariable String rejectUsername) {
         connectionService.rejectConnectionRequest(username, rejectUsername);
         return ResponseEntity.ok().build();
