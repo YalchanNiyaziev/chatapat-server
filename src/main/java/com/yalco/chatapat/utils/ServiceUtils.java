@@ -5,6 +5,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
+import java.util.Objects;
 
 public class ServiceUtils {
 
@@ -15,6 +18,13 @@ public class ServiceUtils {
             return currentUserName;
         }
         return null;
+    }
+
+    public static boolean isAuthorizedRequester(String requesterUsername) {
+        if (StringUtils.hasText(requesterUsername)) {
+            return Objects.equals(requesterUsername, getAuthenticatedUsername());
+        }
+        return false;
     }
 
     public static boolean isConnected(UserConnection connection) {

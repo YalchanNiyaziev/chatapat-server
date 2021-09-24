@@ -36,4 +36,9 @@ public class ChatUserController {
     }
 
     //TODO add functionality to edit user profile and change Pass AND RESET PASS AND SEND WELCOME EMAIL
+    @PutMapping("/users/{username}")
+    public ResponseEntity<ChatUserDto> updateUserInfo(@PathVariable String username, @RequestBody ChatUserDto updateRequest){
+        userService.updateUserInfo(username, updateRequest);
+        return ResponseEntity.ok().build();
+    }
 }

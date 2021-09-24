@@ -1,13 +1,15 @@
 package com.yalco.chatapat.service;
 
+import com.yalco.chatapat.dto.AddressDto;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
 import com.yalco.chatapat.dto.SearchChatUserDto;
+import com.yalco.chatapat.entity.Address;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserStatus;
 import com.yalco.chatapat.enums.UserRole;
-import com.yalco.chatapat.exception.UserConnectionOperationException;
+import com.yalco.chatapat.exception.AccessDeniedException;
 import com.yalco.chatapat.exception.UserNotFoundException;
 import com.yalco.chatapat.repository.ChatUserRepository;
 import com.yalco.chatapat.repository.UserConnectionRepository;
@@ -105,6 +107,33 @@ public class ChatUserService {
         logger.trace("User with username {} was created at {}", chatUser.getUsername(), chatUser.getRegistrationTs());
     }
 
+    public void updateUserInfo(String username, ChatUserDto updateInfoData) {
+        if(!ServiceUtils.isAuthorizedRequester(username)) {
+            throw new AccessDeniedException("Can not execute user profile update request. Given user not have authorities to make changes on this user.");
+        }
+        validateUserUpdateInfo(updateInfoData);
+        ChatUser userToUpdate = chatUserRepository.findChatUserByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Not found user with username " + username));
+
+        userToUpdate.setFirstName(updateInfoData.getFirstName());
+        userToUpdate.setLastName(updateInfoData.getLastName());
+        userToUpdate.setChatName(updateInfoData.getChatName());
+        userToUpdate.setBirthDate(userToUpdate.getBirthDate());
+        userToUpdate.setGender(updateInfoData.getGender());
+        userToUpdate.setStatus(updateInfoData.getStatus());
+        if(updateInfoData.getAddress() != null){
+            AddressDto addressDto = updateInfoData.getAddress();
+            validateAddress(addressDto);
+            Address address = new Address();
+            address.setCountry(addressDto.getCountry());
+            address.setCity(addressDto.getCity());
+            address.setStreet(addressDto.getStreet());
+            address.setPostCode(addressDto.getPostCode());
+            userToUpdate.setAddress(address);
+        }
+        chatUserRepository.save(userToUpdate);
+    }
+
     public Set<ChatUser> findChatUserByUsernames(String... usernames) {
         Set<ChatUser> foundUsers = chatUserRepository.findAllByUsernameIn(Arrays.asList(usernames));
         return foundUsers;
@@ -128,27 +157,32 @@ public class ChatUserService {
     private void validateUser(ChatUserRegistrationRequest user) {
         Assert.notNull(user, "User must be provided");
 
-        Assert.notNull(user.getEmail(), "Email must be provided");
-        Assert.hasLength(user.getEmail(), "Email must not be empty");
+        Assert.hasText(user.getEmail(), "Email must be provided");
         Optional<ChatUser> foundUser = chatUserRepository.findChatUserByUsername(user.getEmail());
         Assert.isNull(foundUser.orElse(null), "Username already in use");
-
-        Assert.notNull(user.getPassword(), "Password must be provided");
-        Assert.hasLength(user.getPassword(), "Password must not be empty");
-
-        Assert.notNull(user.getPassword(), "Password confirmation must be provided");
-        Assert.hasLength(user.getPassword(), "Password confirmation must not be empty");
-
+        Assert.hasText(user.getPassword(), "Password must be provided");
+        Assert.hasText(user.getPassword(), "Password confirmation must be provided");
         Assert.isTrue(doesPasswordConfirm(user.getPassword(), user.getPasswordConfirm()), "Password must match with confirm pass");
         Assert.notNull(user.getBirthDate(), "Birth date must be provided");
-
-        Assert.notNull(user.getFirstName(), "First name must be provided");
-        Assert.hasLength(user.getFirstName(), "First name must not be empty");
-
-        Assert.notNull(user.getLastName(), "Last name must be provided");
-        Assert.hasLength(user.getLastName(), "Last name must not be empty");
-
+        Assert.hasText(user.getFirstName(), "First name must be provided");
+        Assert.hasText(user.getLastName(), "Last name must be provided");
         Assert.notNull(user.getGender(), "Gender must be provided");
+    }
+
+    private void validateUserUpdateInfo(ChatUserDto updateInfoData) {
+        Assert.notNull(updateInfoData, "User info must be provided");
+        Assert.hasText(updateInfoData.getFirstName(), "Valid first name is required");
+        Assert.hasText(updateInfoData.getLastName(), "Valid last name is required");
+        Assert.notNull(updateInfoData.getBirthDate(), "Valid birth date is required");
+        Assert.notNull(updateInfoData.getGender(), "Valid gender is required");
+    }
+
+    private void validateAddress(AddressDto address) {
+        Assert.notNull(address, "Address must be provided");
+        Assert.hasText(address.getCountry(), "Address country must be provided");
+        Assert.hasText(address.getCity(), "Address city must be provided");
+        Assert.hasText(address.getStreet(), "Address street must be provided");
+        Assert.hasText(address.getPostCode(), "Address post code must be provided");
     }
 
     private boolean doesPasswordConfirm(String password, String confirmPassword) {
