@@ -1,8 +1,10 @@
 package com.yalco.chatapat.service;
 
+import com.yalco.chatapat.dto.AddressDto;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
 import com.yalco.chatapat.dto.SearchChatUserDto;
+import com.yalco.chatapat.entity.Address;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.entity.UserConnection;
 import com.yalco.chatapat.enums.ChatUserStatus;
@@ -42,6 +44,48 @@ public class ChatUserService {
     public List<ChatUserDto> getALlChatUsers() {
         List<ChatUser> chatUsers = chatUserRepository.findAll();
         return ObjectConverter.convertList(chatUsers, ChatUserDto.class);
+    }
+
+    public ChatUserDto updateUserInfo(String username, ChatUserDto updatedUserInfo) {
+        validateUpdateUserData(updatedUserInfo);
+        ChatUser userToUpdate = getChatUserByUsername(username);
+        ServiceUtils.checkSelfOperation(username);
+
+        userToUpdate.setChatName(updatedUserInfo.getChatName());
+        userToUpdate.setFirstName(updatedUserInfo.getFirstName());
+        userToUpdate.setLastName(updatedUserInfo.getLastName());
+        userToUpdate.setBirthDate(updatedUserInfo.getBirthDate());
+        userToUpdate.setGender(updatedUserInfo.getGender());
+        if (updatedUserInfo.getAddress() != null) {
+            if (userToUpdate.getAddress() == null) {
+                userToUpdate.setAddress(new Address());
+            }
+            AddressDto addressDto = updatedUserInfo.getAddress();
+            userToUpdate.getAddress().setCountry(addressDto.getCountry());
+            userToUpdate.getAddress().setCity(addressDto.getCity());
+            userToUpdate.getAddress().setStreet(addressDto.getStreet());
+            userToUpdate.getAddress().setPostCode(addressDto.getPostCode());
+        } else {
+            userToUpdate.setAddress(null);
+        }
+        return ObjectConverter.convertObject(
+                chatUserRepository.save(userToUpdate), ChatUserDto.class
+        );
+    }
+
+    private void validateUpdateUserData(ChatUserDto updatedUserInfo) {
+        Assert.notNull(updatedUserInfo, "Not null updated user info is required");
+        Assert.hasText(updatedUserInfo.getFirstName(), "Valid user first name is required");
+        Assert.hasText(updatedUserInfo.getLastName(), "Valid user last name is required");
+        Assert.notNull(updatedUserInfo.getBirthDate(), "Valid user birth date is required");
+        Assert.notNull(updatedUserInfo.getGender(), "Valid user gender is required");
+        if(updatedUserInfo.getAddress() != null) {
+            AddressDto addressDto = updatedUserInfo.getAddress();
+            Assert.hasText(addressDto.getCountry(), "Valid country is required");
+            Assert.hasText(addressDto.getCity(), "Valid city is required");
+            Assert.hasText(addressDto.getStreet(), "Valid street is required");
+            Assert.hasText(addressDto.getPostCode(), "Valid post code is required");
+        }
     }
 
     public List<ChatUserDto> searchChatUserByStandardUser(SearchChatUserDto search) {
@@ -127,7 +171,6 @@ public class ChatUserService {
 
     private void validateUser(ChatUserRegistrationRequest user) {
         Assert.notNull(user, "User must be provided");
-
         Assert.notNull(user.getEmail(), "Email must be provided");
         Assert.hasLength(user.getEmail(), "Email must not be empty");
         Optional<ChatUser> foundUser = chatUserRepository.findChatUserByUsername(user.getEmail());
