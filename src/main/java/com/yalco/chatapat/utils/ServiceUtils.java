@@ -1,20 +1,28 @@
 package com.yalco.chatapat.utils;
 
 import com.yalco.chatapat.entity.UserConnection;
+import com.yalco.chatapat.exception.OperationNotAllowedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.Assert;
 
+import java.util.Objects;
+
 public class ServiceUtils {
 
     public static String getAuthenticatedUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            String currentUserName = authentication.getName();
-            return currentUserName;
+        if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+            return authentication.getName();
         }
         return null;
+    }
+
+    public static void checkSelfOperation(String username) {
+        if (username == null || !Objects.equals(username, getAuthenticatedUsername())) {
+            throw new OperationNotAllowedException("Can not execute operation. Your account not has rights to make changes on this user.");
+        }
     }
 
     public static boolean isConnected(UserConnection connection) {

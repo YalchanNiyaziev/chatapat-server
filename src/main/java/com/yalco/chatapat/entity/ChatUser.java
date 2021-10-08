@@ -50,7 +50,7 @@ public class ChatUser extends BaseUser{
     @Column(name = "registration_ts", nullable = false)
     private Instant registrationTs;
 
-    @ManyToOne(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "address_id")
     private Address address;
 

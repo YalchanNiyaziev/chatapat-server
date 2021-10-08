@@ -30,6 +30,11 @@ public class ChatUserController {
         return ResponseEntity.ok(userService.getChatUseDtoByUsername(username));
     }
 
+    @PutMapping("/users/{username}")
+    public ResponseEntity<ChatUserDto> updateChatUser(@PathVariable String username, @RequestBody ChatUserDto updatedUserInfo) {
+        return ResponseEntity.ok(userService.updateUserInfo(username, updatedUserInfo));
+    }
+
     @PostMapping("/users/search")
     public ResponseEntity<List<ChatUserDto>> search(@RequestBody SearchChatUserDto search) {
         return ResponseEntity.ok(userService.searchChatUserByStandardUser(search));
