@@ -1,6 +1,7 @@
 package com.yalco.chatapat.api.controller;
 
 import com.yalco.chatapat.dto.AddressDto;
+import com.yalco.chatapat.dto.ChangeCredentialsRequest;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.enums.ChatUserGender;
@@ -255,7 +256,7 @@ class ChatUserControllerTest {
                         .build())
                 .build();
 
-        ChatUserDto updatedUserInfo =  chatUserController.updateChatUser("fake1", validChatUser).getBody();
+        ChatUserDto updatedUserInfo = chatUserController.updateChatUser("fake1", validChatUser).getBody();
 
         assertNotNull(updatedUserInfo);
         assertEquals(validChatUser.getChatName(), updatedUserInfo.getChatName());
@@ -280,7 +281,7 @@ class ChatUserControllerTest {
                 .gender(ChatUserGender.MALE)
                 .build();
 
-       ChatUserDto updatedUserInfo =  chatUserController.updateChatUser("fake1", validChatUser).getBody();
+        ChatUserDto updatedUserInfo = chatUserController.updateChatUser("fake1", validChatUser).getBody();
 
         assertNotNull(updatedUserInfo);
         assertEquals(validChatUser.getChatName(), updatedUserInfo.getChatName());
@@ -301,9 +302,73 @@ class ChatUserControllerTest {
                 .gender(ChatUserGender.MALE)
                 .build();
 
-       assertThrows(OperationNotAllowedException.class,
-               () -> chatUserController.updateChatUser("fake2" +
-                       "", validChatUser));
+        assertThrows(OperationNotAllowedException.class,
+                () -> chatUserController.updateChatUser("fake2" +
+                        "", validChatUser));
+    }
+
+    @Test
+    @DisplayName("when update password, missing username, expect throws")
+    public void updatePasswordMissingUsername() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "new_fake_pass1", "new_fake_pass1");
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword(null, request));
+    }
+
+    @Test
+    @DisplayName("when update password, null request data, expect throws")
+    public void updatePasswordNullRequest() {
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", null));
+    }
+
+    @Test
+    @DisplayName("when update password, missing old pass, expect throws")
+    public void updatePasswordMissingOldPass() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest(null, "new_fake_pass1", "new_fake_pass1");
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", request));
+    }
+
+    @Test
+    @DisplayName("when update password, missing new pass, expect throws")
+    public void updatePasswordMissingNewPass() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "", "new_fake_pass1");
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", request));
+    }
+
+    @Test
+    @DisplayName("when update password, missing new pass confirm, expect throws")
+    public void updatePasswordMissingNewPassConfirm() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "new_fake_pass1", null);
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", request));
+    }
+
+    @Test
+    @DisplayName("when update password, old password mismatch, expect throws")
+    public void updatePasswordMismatchOldPass() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1?????????", "new_fake_pass1", "new_fake_pass1");
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", request));
+    }
+
+    @Test
+    @DisplayName("when update password, new pass and confirm not equal, expect throws")
+    public void updatePasswordMismatchNewPass() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "new_fake_pass1", "new_fake_pass13333333");
+        assertThrows(IllegalArgumentException.class, () -> chatUserController.updatePassword("fake1", request));
+    }
+
+    @Test
+    @DisplayName("when update password foreign user, expect throws")
+    public void updatePasswordForeignUser() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "new_fake_pass1", "new_fake_pass1");
+        assertThrows(OperationNotAllowedException.class, () -> chatUserController.updatePassword("fake2", request));
+    }
+
+    @Test
+    @DisplayName("when update password with valid data, expect update")
+    public void updatePasswordValid() {
+        ChangeCredentialsRequest request = new ChangeCredentialsRequest("fake_pass1", "new_fake_pass1", "new_fake_pass1");
+        chatUserController.updatePassword("fake1", request);
+        ChatUser chatUser = userRepository.findChatUserByUsername("fake1").get();
+        assertTrue(passwordEncoder.matches("new_fake_pass1", chatUser.getPassword()));
     }
 
 }

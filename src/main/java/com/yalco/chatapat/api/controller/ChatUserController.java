@@ -1,5 +1,6 @@
 package com.yalco.chatapat.api.controller;
 
+import com.yalco.chatapat.dto.ChangeCredentialsRequest;
 import com.yalco.chatapat.dto.ChatUserDto;
 import com.yalco.chatapat.dto.SearchChatUserDto;
 import com.yalco.chatapat.service.ChatUserService;
@@ -33,6 +34,12 @@ public class ChatUserController {
     @PutMapping("/users/{username}")
     public ResponseEntity<ChatUserDto> updateChatUser(@PathVariable String username, @RequestBody ChatUserDto updatedUserInfo) {
         return ResponseEntity.ok(userService.updateUserInfo(username, updatedUserInfo));
+    }
+
+    @PutMapping("/users/{username}/password")
+    public ResponseEntity<?> updatePassword(@PathVariable String username, @RequestBody ChangeCredentialsRequest changeCredentialsRequest) {
+        userService.changePassword(username, changeCredentialsRequest);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/users/search")

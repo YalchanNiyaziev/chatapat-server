@@ -1,9 +1,6 @@
 package com.yalco.chatapat.service;
 
-import com.yalco.chatapat.dto.AddressDto;
-import com.yalco.chatapat.dto.ChatUserDto;
-import com.yalco.chatapat.dto.ChatUserRegistrationRequest;
-import com.yalco.chatapat.dto.SearchChatUserDto;
+import com.yalco.chatapat.dto.*;
 import com.yalco.chatapat.entity.Address;
 import com.yalco.chatapat.entity.ChatUser;
 import com.yalco.chatapat.entity.UserConnection;
@@ -73,20 +70,18 @@ public class ChatUserService {
         );
     }
 
-    private void validateUpdateUserData(ChatUserDto updatedUserInfo) {
-        Assert.notNull(updatedUserInfo, "Not null updated user info is required");
-        Assert.hasText(updatedUserInfo.getFirstName(), "Valid user first name is required");
-        Assert.hasText(updatedUserInfo.getLastName(), "Valid user last name is required");
-        Assert.notNull(updatedUserInfo.getBirthDate(), "Valid user birth date is required");
-        Assert.notNull(updatedUserInfo.getGender(), "Valid user gender is required");
-        if(updatedUserInfo.getAddress() != null) {
-            AddressDto addressDto = updatedUserInfo.getAddress();
-            Assert.hasText(addressDto.getCountry(), "Valid country is required");
-            Assert.hasText(addressDto.getCity(), "Valid city is required");
-            Assert.hasText(addressDto.getStreet(), "Valid street is required");
-            Assert.hasText(addressDto.getPostCode(), "Valid post code is required");
+    public void changePassword(String username, ChangeCredentialsRequest changeCredentialsRequest) {
+        validatePasswordChangeRequest(changeCredentialsRequest);
+        ChatUser chatUser = getChatUserByUsername(username);
+        ServiceUtils.checkSelfOperation(username);
+        if (!passwordEncoder.matches(changeCredentialsRequest.getOldPass(), chatUser.getPassword())){
+            throw new IllegalArgumentException("Error in password change operation. Valid old password is required.");
         }
+        String encodedNewPassword = passwordEncoder.encode(changeCredentialsRequest.getNewPass());
+        chatUser.setPassword(encodedNewPassword);
+        chatUserRepository.save(chatUser);
     }
+
 
     public List<ChatUserDto> searchChatUserByStandardUser(SearchChatUserDto search) {
         List<ChatUserDto> resultList = new ArrayList<>();
@@ -192,6 +187,29 @@ public class ChatUserService {
         Assert.hasLength(user.getLastName(), "Last name must not be empty");
 
         Assert.notNull(user.getGender(), "Gender must be provided");
+    }
+
+    private void validateUpdateUserData(ChatUserDto updatedUserInfo) {
+        Assert.notNull(updatedUserInfo, "Not null updated user info is required");
+        Assert.hasText(updatedUserInfo.getFirstName(), "Valid user first name is required");
+        Assert.hasText(updatedUserInfo.getLastName(), "Valid user last name is required");
+        Assert.notNull(updatedUserInfo.getBirthDate(), "Valid user birth date is required");
+        Assert.notNull(updatedUserInfo.getGender(), "Valid user gender is required");
+        if(updatedUserInfo.getAddress() != null) {
+            AddressDto addressDto = updatedUserInfo.getAddress();
+            Assert.hasText(addressDto.getCountry(), "Valid country is required");
+            Assert.hasText(addressDto.getCity(), "Valid city is required");
+            Assert.hasText(addressDto.getStreet(), "Valid street is required");
+            Assert.hasText(addressDto.getPostCode(), "Valid post code is required");
+        }
+    }
+
+    private void validatePasswordChangeRequest(ChangeCredentialsRequest changeCredentialsRequest) {
+        Assert.notNull(changeCredentialsRequest, "Valid password change data is required");
+        Assert.hasText(changeCredentialsRequest.getOldPass(), "Old password is required for password change operation");
+        Assert.hasText(changeCredentialsRequest.getNewPass(), "New password is required for password change operation");
+        Assert.hasText(changeCredentialsRequest.getNewPassConfirm(), "New password confirmation is required for password change operation");
+        Assert.isTrue(Objects.equals(changeCredentialsRequest.getNewPass(), changeCredentialsRequest.getNewPassConfirm()), "New password and new password confirm must be equal.");
     }
 
     private boolean doesPasswordConfirm(String password, String confirmPassword) {
